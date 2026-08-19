@@ -1,0 +1,381 @@
+.card{
+
+    width:var(--card-width);
+
+    height:var(--card-height);
+
+    position:relative;
+
+    border-radius:8px;
+
+    overflow:hidden;
+
+    background:white;
+
+    flex-shrink:0;
+
+}
+
+
+.card-image{
+
+    width:100%;
+
+    height:100%;
+
+    object-fit:cover;
+
+    display:block;
+
+}
+
+
+
+/* 選択状態 */
+
+.card.selected{
+
+    transform:
+    translateY(-15px);
+
+    outline:
+    4px solid gold;
+
+}
+
+
+
+/* 横向きカード */
+
+.card.horizontal{
+
+    transform:
+    rotate(90deg);
+
+}
+
+
+
+/* 手札 */
+
+#hand-area{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:8px;
+
+    padding:10px;
+
+    width:100%;
+
+    background:
+    rgba(0,0,0,0.15);
+
+}
+
+
+
+
+#hand-area .card{
+
+    width:95px;
+
+    height:143px;
+
+    flex-shrink:0;
+
+}
+
+
+
+
+.card-cost{
+
+    position:absolute;
+
+    top:4px;
+
+    left:4px;
+
+
+    width:24px;
+
+    height:24px;
+
+
+    border-radius:50%;
+
+
+    background:#222;
+
+    color:white;
+
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+
+    font-weight:bold;
+
+    z-index:2;
+
+}
+
+/*=========================
+ 攻撃対象
+=========================*/
+
+.attack-target{
+
+    outline:4px solid #ffb300;
+
+    outline-offset:2px;
+
+    box-shadow:
+        0 0 10px rgba(255,179,0,.8);
+
+    cursor:pointer;
+
+}
+
+/*================================
+ 使用カード選択
+================================*/
+
+.card.selected-use{
+
+
+    transform:
+    translateY(-20px);
+
+
+    border:
+    3px solid gold;
+
+
+    box-shadow:
+    0 0 15px gold;
+
+
+}
+
+
+
+/*================================
+ コストカード選択
+================================*/
+
+
+.card.selected-cost{
+
+
+    border:
+    3px solid cyan;
+
+
+    box-shadow:
+    0 0 15px cyan;
+
+
+    filter:
+    brightness(0.7);
+
+
+}
+
+/*======================================
+  場カード選択
+======================================*/
+
+.card.field-selected{
+
+    outline:4px solid #00ffff;
+
+    outline-offset:4px;
+
+    border-radius:10px;
+
+}
+
+
+/*=========================
+  マギア対象
+=========================*/
+
+.magia-target{
+
+    outline:4px solid #00d8ff;
+    outline-offset:2px;
+
+    cursor:pointer;
+
+    animation:
+        magiaTargetFlash
+        0.8s
+        infinite;
+
+}
+
+@keyframes magiaTargetFlash{
+
+    0%{
+
+        outline-color:#00d8ff;
+
+    }
+
+    50%{
+
+        outline-color:#ffffff;
+
+    }
+
+    100%{
+
+        outline-color:#00d8ff;
+
+    }
+
+}
+
+
+
+
+/*======================================
+ 発光
+======================================*/
+
+.card-highlight{
+
+    box-shadow:
+        0 0 10px gold,
+        0 0 20px gold,
+        0 0 30px gold;
+
+}
+
+
+/*======================================
+ マーカー
+======================================*/
+
+.card{
+
+    position:relative;
+
+}
+
+.card-marker{
+
+    position:absolute;
+
+    left:50%;
+    top:50%;
+
+    width:90px;
+    height:90px;
+
+    transform:
+    translate(-50%,-50%);
+
+    border-radius:50%;
+
+    pointer-events:none;
+
+    z-index:100;
+
+}
+
+
+/*======================================
+ 選択中
+======================================*/
+
+.marker-selected{
+
+    border:
+    6px solid white;
+
+}
+
+
+/*======================================
+ 対象
+======================================*/
+
+.marker-target{
+
+    border:
+    6px solid red;
+
+}
+
+
+.card-current-power{
+
+    position:absolute;
+
+    left:4px;
+    bottom:4px;
+
+    width:30px;
+    height:30px;
+
+    border-radius:50%;
+
+    background:#e9e7da;
+
+    color:#440ae4;
+
+    font-size:30px;
+
+    font-weight:bold;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    pointer-events:none;
+
+     position:absolute;
+
+    left:4px;
+    bottom:4px;
+
+    width:30px;
+    height:30px;
+
+    border-radius:50%;
+
+    background:#e2e2e1;
+
+    color:#4b03f3;
+
+    font-size:30px;
+
+    font-weight:bold;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    pointer-events:none;
+
+    border:2px solid #ffffff;
+
+    box-shadow:
+        0 0 6px rgba(255,140,0,0.8);
+}
+
+
