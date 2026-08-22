@@ -1,4 +1,4 @@
-//======================================
+/======================================
 // 発動中イベント
 //======================================
 
@@ -75,7 +75,7 @@ function startResistCost(){
     if(currentCost > 0){
 
         showActionGuide(
-            `コストゾーンに置くカードを${currentCost}枚選んでください`
+            `コストゾーンに置くカードを<br>${currentCost}枚選んでください`
         );
 
     }
@@ -272,7 +272,7 @@ function updateResistButtons(){
     //----------------------------------
 
     confirmButton.textContent =
-    "レジスト発動";
+    "決定";
 
 
     confirmButton.onclick =
@@ -486,7 +486,7 @@ function activateResist(card){
 function passResist(){
 
     console.log(
-        "レジストを使用しない"
+        "レジストをプレイしない"
     );
 
     //----------------------------------
@@ -1401,7 +1401,7 @@ function cancelResistCost(){
     //----------------------------------
 
     showActionGuide(
-        "レジストを使用しますか？"
+        "レジストをプレイしますか？"
     );
 
     updateGameState();
