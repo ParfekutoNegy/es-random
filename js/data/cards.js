@@ -225,7 +225,7 @@ const CARD_LIST = [
         trigger:"beforePlayerDamage",
         condition:rapidMoveCondition,
         effect:"rapidMove",
-        text:"アッタクで受けるダメージを０にする"
+        text:"アタックで受けるダメージを０にする"
     },
     {
         id: 17,
