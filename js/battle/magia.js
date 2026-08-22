@@ -11,7 +11,7 @@ let magiaTargetMode = false;
 
 let forceCostMode = false;
 let forceCostPlayer = null;
-
+let selectedForceCostCard = null;
 
 //=========================
 // マギア効果処理
@@ -205,8 +205,9 @@ function startMagiaCost(){
     if(currentCost > 0){
 
         showActionGuide(
-            `コストゾーンに置くカードを${currentCost}枚選んでください`
+            `コストゾーンに置くカードを<br>${currentCost}枚選んでください`
         );
+
     }
 
 
@@ -2081,6 +2082,8 @@ function startForceCostSelect(target){
     forceCostMode =
         true;
 
+    selectedForceCostCard =
+    null;
 
     //----------------------------------
     // 対象プレイヤーの手札確認
@@ -2224,18 +2227,95 @@ function selectForceCostCard(card){
 
 
     //----------------------------------
-    // マギア確認
+    // 強制コスト選択中でなければ無効
     //----------------------------------
 
-    if(!magiaCard){
-
-        console.error(
-            "selectForceCostCard：magiaCardがnullです"
-        );
+    if(!forceCostMode){
 
         return;
 
     }
+
+
+    //----------------------------------
+    // プレイヤーの手札以外は選択不可
+    //----------------------------------
+
+    if(
+        forceCostPlayer !== PLAYER ||
+        card.area !== "hand"
+    ){
+
+        return;
+
+    }
+
+
+    //----------------------------------
+    // 前回の選択を解除
+    //----------------------------------
+
+    if(selectedForceCostCard){
+
+        selectedForceCostCard.setSelected(
+            false
+        );
+
+    }
+
+
+    //----------------------------------
+    // 今回のカードを選択
+    //----------------------------------
+
+    selectedForceCostCard =
+        card;
+
+    card.setSelected(true);
+
+
+    //----------------------------------
+    // カード情報表示
+    //----------------------------------
+
+    showCardInfo(card);
+
+
+    //----------------------------------
+    // 決定・キャンセルを表示
+    //----------------------------------
+
+    updateButtons();
+
+
+    console.log(
+        "ウインドプレッシャー：コストカード選択中",
+        card.name
+    );
+
+}
+
+function confirmForceCostCard(){
+
+    //----------------------------------
+    // 選択確認
+    //----------------------------------
+
+    if(
+        !forceCostMode ||
+        forceCostPlayer !== PLAYER ||
+        !selectedForceCostCard
+    ){
+
+        return;
+
+    }
+
+
+    console.log(
+        "ウインドプレッシャー：コストカード決定",
+        selectedForceCostCard.name
+    );
 
 
     //----------------------------------
@@ -2247,61 +2327,28 @@ function selectForceCostCard(card){
 
 
     //----------------------------------
-    // CPUマギアか保存
+    // 選択カードを保存
     //----------------------------------
 
-    const isCpuMagia =
-        resolvedMagia.owner === ENEMY;
-
-
-    //----------------------------------
-    // 誰の手札を選択したか保存
-    //----------------------------------
-
-    const selectedForceCostPlayer =
-        forceCostPlayer;
+    const selectedCard =
+        selectedForceCostCard;
 
 
     //----------------------------------
-    // 選択対象の所有者で移動先を分ける
+    // コストゾーンへ移動
     //----------------------------------
 
-    if(
-        selectedForceCostPlayer === PLAYER
-    ){
+    moveToCost(
+        selectedCard
+    );
 
-        //----------------------------------
-        // PLAYERの手札
-        //----------------------------------
 
-        moveToCost(
-            card
-        );
+    //----------------------------------
+    // 選択解除
+    //----------------------------------
 
-    }
-    else if(
-        selectedForceCostPlayer === ENEMY
-    ){
-
-        //----------------------------------
-        // CPUの手札
-        //----------------------------------
-
-        moveEnemyToCost(
-            card
-        );
-
-    }
-    else{
-
-        console.error(
-            "selectForceCostCard：forceCostPlayerが不正です",
-            selectedForceCostPlayer
-        );
-
-        return;
-
-    }
+    selectedForceCostCard =
+        null;
 
 
     //----------------------------------
@@ -2323,7 +2370,7 @@ function selectForceCostCard(card){
 
 
     //----------------------------------
-    // ハイライト解除
+    // ハイライト更新
     //----------------------------------
 
     updateGameState();
@@ -2337,24 +2384,65 @@ function selectForceCostCard(card){
 
     resolveMagiaAfterForceCost(
         resolvedMagia,
-        selectedForceCostPlayer
+        PLAYER
     );
 
 
     //----------------------------------
-    // PLAYERの手札を選択した場合
-    //----------------------------------
-    // PLAYERターン中なら
     // 使用可能カードの発光を復帰
+    //----------------------------------
 
     if(
-        selectedForceCostPlayer === PLAYER &&
         game.currentPlayer === PLAYER
     ){
 
         updateUsableCardHighlight();
 
     }
+
+}
+
+function cancelForceCostCard(){
+
+    console.log(
+        "ウインドプレッシャー：コストカード選択キャンセル"
+    );
+
+
+    //----------------------------------
+    // 選択解除
+    //----------------------------------
+
+    if(selectedForceCostCard){
+
+        selectedForceCostCard.setSelected(
+            false
+        );
+
+    }
+
+
+    selectedForceCostCard =
+        null;
+
+
+    //----------------------------------
+    // カード情報を閉じる
+    //----------------------------------
+
+    clearHandSelection();
+
+
+    //----------------------------------
+    // 再び「1枚選んでください」の状態
+    //----------------------------------
+
+    showActionGuide(
+        "手札を1枚コストゾーンに置いてください"
+    );
+
+
+    updateButtons();
 
 }
 
