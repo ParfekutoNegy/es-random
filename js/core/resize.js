@@ -31,8 +31,7 @@ function resizeGame(){
         Math.min(
             window.innerWidth / baseWidth,
             window.innerHeight / baseHeight
-        ) * 1;
-
+        );
 
 
     //----------------------------------
@@ -55,6 +54,23 @@ function resizeGame(){
 
     game.style.height =
         `${baseHeight}px`;
+
+
+    //----------------------------------
+    // モーダル用の表示倍率を保存
+    //
+    // モーダルは battle-screen 内にあるため
+    // 通常ならゲーム画面と一緒に縮小される。
+    //
+    // そこで現在の倍率をCSS変数として渡し、
+    // モーダル側で逆倍率を適用する。
+    //----------------------------------
+
+    game.style.setProperty(
+        "--game-scale",
+        scale
+    );
+
 }
 
 window.addEventListener(
