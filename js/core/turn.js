@@ -76,6 +76,8 @@ showTurnMessage(
 
         recoverCostCards();
 
+        updateCostZoneView();
+
 
         //----------------------------------
         // ③ クール回収
@@ -147,7 +149,7 @@ function finishCoolRecovery(){
 
     updateGameState();
 
-
+    updateCostZoneView();
 
     onTurnStart(
         game.currentPlayer
@@ -387,6 +389,8 @@ function switchPlayer(){
 
         game.currentPlayer = ENEMY;
 
+        updateButtons();
+
     }else{
 
         game.currentPlayer = PLAYER;
@@ -400,6 +404,21 @@ function switchPlayer(){
 //======================================
 
 function startCpuTurn(){
+
+
+    //----------------------------------
+    // ゲーム終了後はCPUターン開始禁止
+    //----------------------------------
+
+    if(battleGameEnding){
+
+        console.log(
+            "CPUターン開始中止：ゲーム終了"
+        );
+
+        return;
+
+    }
 
 
     //----------------------------------
