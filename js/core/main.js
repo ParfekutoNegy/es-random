@@ -40,7 +40,7 @@ let playerWins = 0;
 let enemyWins = 0;
 
 //======================================
-// 対戦中の開始手札使用履歴
+// 対戦中の開始手札使用履歴(旧)
 //======================================
 
 let playerStartingCardIds = [];
@@ -97,6 +97,12 @@ let resistCostConfirm = false;
 //======================================
 
 let turnAnimation = false;
+
+//======================================
+// ゲーム終了状態
+//======================================
+
+let battleGameEnding = false;
 
 //==================================================
 // DOM読み込み
@@ -396,11 +402,13 @@ function initializeGame(){
     // 開始手札履歴初期化
     //------------------------------------------
 
-    playerStartingCardIds = [];
+playerStartingCardIds = [];
 
-    enemyStartingCardIds = [];
+enemyStartingCardIds = [];
 
+playerMatchStartingCards = [];
 
+enemyMatchStartingCards = [];
 
     //------------------------------------------
     // 勝利スター表示
@@ -478,10 +486,6 @@ function initializeGame(){
 
 }
 
-//==================================================
-// 初期配置
-//==================================================
-
 function setupGame(){
 
     //----------------------------------
@@ -528,17 +532,53 @@ function setupGame(){
     board.enemyCoolCards = [];
 
 
-    //----------------------------------
-    // 新しい開始手札を生成
-    //----------------------------------
+//----------------------------------
+// 開始手札を生成
+//----------------------------------
 
-    const playerHand =
+let playerHand;
+let enemyHand;
+
+
+//==================================
+// 1戦目
+//==================================
+if(matchGameNumber === 1){
+
+    console.log(
+        "★ 1戦目：32枚から初期手札10枚を生成"
+    );
+
+
+    playerHand =
         createTestHand();
 
 
-    const enemyHand =
+    enemyHand =
         createEnemyTestHand();
 
+}
+else{
+
+    console.log(
+        "★ 第" +
+        matchGameNumber +
+        "戦：使用済みカードを除外して初期手札10枚を生成"
+    );
+
+
+    playerHand =
+        createNextGameHand(
+            PLAYER
+        );
+
+
+    enemyHand =
+        createNextGameHand(
+            ENEMY
+        );
+
+}
 
     //----------------------------------
     // プレイヤー手札
@@ -645,6 +685,128 @@ function onCardClick(card){
         card
     );
 
+//----------------------------------
+// クール回収モード
+//----------------------------------
+
+if(coolRecoveryMode){
+
+    //----------------------------------
+    // 前回の通常カード選択解除
+    //----------------------------------
+
+    if(selectedInfoCard){
+
+        selectedInfoCard.setSelected(false);
+
+    }
+
+
+    if(selectedHandCard){
+
+        selectedHandCard.setSelected(false);
+
+    }
+
+
+    //----------------------------------
+    // クールカードの〇を解除
+    //----------------------------------
+
+    document
+        .querySelectorAll(".card-marker")
+        .forEach(marker=>{
+
+            marker.style.display =
+                "none";
+
+        });
+
+
+    //----------------------------------
+    // クールカード以外をクリック
+    //----------------------------------
+
+    if(card.area !== "cool"){
+
+        //----------------------------------
+        // クール回収対象解除
+        //----------------------------------
+
+        selectedCoolCard =
+            null;
+
+
+        //----------------------------------
+        // 今回のカードを選択
+        //----------------------------------
+
+        selectedInfoCard =
+            card;
+
+
+        card.setSelected(true);
+
+
+        //----------------------------------
+        // カード詳細表示
+        //----------------------------------
+
+        showCardInfo(
+            card
+        );
+
+
+        //----------------------------------
+        // アクションボタン更新
+        //----------------------------------
+
+        updateButtons();
+
+
+        return;
+
+    }
+
+
+    //----------------------------------
+    // クールカードをクリックした場合
+    //----------------------------------
+
+    selectedInfoCard =
+        card;
+
+
+    selectedCoolCard =
+        card;
+
+
+    //----------------------------------
+    // カード選択
+    //----------------------------------
+
+    card.setSelected(true);
+
+
+    //----------------------------------
+    // カード詳細表示
+    //----------------------------------
+
+    showCardInfo(
+        card
+    );
+
+
+    //----------------------------------
+    // アクションボタン更新
+    //----------------------------------
+
+    updateButtons();
+
+
+    return;
+
+}
     //----------------------------------
     // マギア対象選択中
     //----------------------------------
@@ -1619,12 +1781,10 @@ function startSummon(card){
     //----------------------------------
 
     showActionGuide(
-        "コストゾーンに置くカードを" +
+        "コストゾーンに置くカードを<br>"+
         currentCost +
         "枚選んでください"
     );
-
-
 
 
     //----------------------------------
@@ -1975,7 +2135,15 @@ function updateCostZoneView(){
     ){
 
         list.innerHTML =
-        "<p>コストカードはありません</p>";
+            "<p>カードはありません</p>";
+
+
+        //----------------------------------
+        // 手札位置を通常位置へ戻す
+        //----------------------------------
+
+        updateHandPositionForCost();
+
 
         return;
 
@@ -2048,8 +2216,15 @@ function updateCostZoneView(){
 
     });
 
-}
 
+    //----------------------------------
+    // コスト枚数に合わせて
+    // 手札位置を更新
+    //----------------------------------
+
+    updateHandPositionForCost();
+
+}
 //=========================
 // 召喚キャンセル
 //=========================
@@ -2132,6 +2307,13 @@ function openCostView(){
     modal.style.display =
         "block";
 
+    //----------------------------------
+    // 手札位置を調整
+    //----------------------------------
+
+    updateHandPositionForCost();
+
+
 }
 //=========================
 // コストモーダルを閉じる
@@ -2143,6 +2325,224 @@ function closeCostView(){
         "cost-modal"
     ).style.display =
     "none";
+
+    //----------------------------------
+    // 手札位置を元に戻す
+    //----------------------------------
+
+    resetHandPositionForCost();
+
+}
+
+function updateHandPositionForCost(){
+
+    const hand =
+        document.getElementById(
+            "hand-cards-area"
+        );
+
+    const handArea =
+        document.getElementById(
+            "hand-area"
+        );
+
+    const costModal =
+        document.getElementById(
+            "cost-modal"
+        );
+
+    const costList =
+        document.getElementById(
+            "cost-list"
+        );
+
+
+    if(
+        !hand ||
+        !handArea ||
+        !costModal ||
+        !costList
+    ){
+        return;
+    }
+
+
+    //----------------------------------
+    // コストカード枚数
+    //----------------------------------
+
+    const costCards =
+        costList.querySelectorAll(
+            ".cost-card"
+        );
+
+    const costCount =
+        costCards.length;
+
+
+    //----------------------------------
+    // コスト0枚
+    //----------------------------------
+
+    if(costCount === 0){
+
+        //----------------------------------
+        // モーダルを上へ
+        //----------------------------------
+
+        costModal.style.top =
+            "69%";
+
+        costModal.style.left =
+        "23%"
+
+
+        //----------------------------------
+        // 手札を通常位置へ
+        //----------------------------------
+
+        hand.classList.remove(
+            "cost-view-open"
+        );
+
+        hand.style.removeProperty(
+            "--cost-hand-shift"
+        );
+
+
+        return;
+    }
+
+
+    //----------------------------------
+    // コスト1枚以上
+    //----------------------------------
+
+    costModal.style.top =
+        "86%";
+
+    costModal.style.left =
+        "18%"
+
+
+    //----------------------------------
+    // モーダルの幅を取得
+    //----------------------------------
+
+    const costWidth =
+        costModal.offsetWidth;
+
+
+    //----------------------------------
+    // 手札の幅
+    //----------------------------------
+
+    const handWidth =
+        hand.offsetWidth;
+
+
+    //----------------------------------
+    // 手札エリアの幅
+    //----------------------------------
+
+    const areaWidth =
+        handArea.clientWidth;
+
+
+    //----------------------------------
+    // コストと手札の間隔
+    //----------------------------------
+
+    const gap = 10;
+
+
+    //----------------------------------
+    // コスト + 手札の合計幅
+    //----------------------------------
+
+    const totalWidth =
+        costWidth +
+        gap +
+        handWidth;
+
+
+    //----------------------------------
+    // 全体を中央配置した場合
+    //----------------------------------
+
+    const totalLeft =
+        (
+            areaWidth -
+            totalWidth
+        ) / 2;
+
+
+    //----------------------------------
+    // 新しい手札左端
+    //----------------------------------
+
+    const newHandLeft =
+        totalLeft +
+        costWidth +
+        gap;
+
+
+    //----------------------------------
+    // 通常時の手札左端
+    //----------------------------------
+
+    const currentHandLeft =
+        (
+            areaWidth -
+            handWidth
+        ) / 2;
+
+
+    //----------------------------------
+    // 移動量
+    //----------------------------------
+
+    const shift =
+        newHandLeft -
+        currentHandLeft;
+
+
+    //----------------------------------
+    // 手札位置更新
+    //----------------------------------
+
+    hand.style.setProperty(
+        "--cost-hand-shift",
+        `${shift}px`
+    );
+
+
+    hand.classList.add(
+        "cost-view-open"
+    );
+
+}
+
+function resetHandPositionForCost(){
+
+    const hand =
+        document.getElementById(
+            "hand-cards-area"
+        );
+
+    if(!hand){
+        return;
+    }
+
+
+    hand.classList.remove(
+        "cost-view-open"
+    );
+
+
+    hand.style.removeProperty(
+        "--cost-hand-shift"
+    );
 
 }
 
@@ -2380,7 +2780,7 @@ resetActionButtons();
 
 
         resistPassButton.textContent =
-        "レジストしない";
+        "プレイしない";
 
 
         resistPassButton.onclick =
@@ -2401,7 +2801,7 @@ resetActionButtons();
 
 
     resistPassButton.textContent =
-    "レジストしない";
+    "プレイしない";
 
 
     resistPassButton.onclick =
@@ -2428,7 +2828,7 @@ resetActionButtons();
         "inline-block";
 
         useButton.textContent =
-        "使用";
+        "プレイ";
 
         useButton.onclick = ()=>{
 
@@ -2469,7 +2869,7 @@ resetActionButtons();
 
 
         confirmButton.textContent =
-        "レジスト発動";
+        "決定";
 
 
         confirmButton.onclick =
@@ -2486,8 +2886,37 @@ resetActionButtons();
 
     }
 
+//----------------------------------
+// アタック対象選択中
+//----------------------------------
+
+if(
+    attackMode &&
+    game.currentPlayer === PLAYER &&
+    !resistMode &&
+    !resistUsingCard &&
+    !blockMode
+){
+
+    actionArea.style.display =
+        "flex";
 
 
+    cancelButton.style.display =
+        "inline-block";
+
+
+    cancelButton.textContent =
+        "キャンセル";
+
+
+    cancelButton.onclick =
+        cancelAttack;
+
+
+    return;
+
+}
     //----------------------------------
     // ブロック中
     //----------------------------------
@@ -2515,15 +2944,121 @@ resetActionButtons();
 
     }
 
+//----------------------------------
+// クール回収中
+//----------------------------------
+
+if(coolRecoveryMode){
+
+    actionArea.style.display =
+        "flex";
+
+
     //----------------------------------
-    // クール回収中
+    // カード未選択
     //----------------------------------
 
-    if(coolRecoveryMode){
+    if(!selectedCoolCard){
+
+        cancelButton.style.display =
+            "none";
+
+        confirmButton.style.display =
+            "none";
 
         return;
 
     }
+
+
+    //----------------------------------
+    // カード選択済み
+    //----------------------------------
+
+    confirmButton.style.display =
+        "inline-block";
+
+    confirmButton.textContent =
+        "決定";
+
+    confirmButton.onclick =
+        ()=>{
+
+            console.log(
+                "クール回収決定",
+                selectedCoolCard
+            );
+
+            recoverCoolCards(
+                PLAYER
+            );
+
+        };
+
+
+    return;
+
+}
+    //----------------------------------
+// ウインドプレッシャー
+// 強制コスト選択中
+//----------------------------------
+
+if(
+    forceCostMode &&
+    forceCostPlayer === PLAYER
+){
+
+    actionArea.style.display =
+        "flex";
+
+
+    //----------------------------------
+    // 選択済み
+    //----------------------------------
+
+    if(selectedForceCostCard){
+
+        cancelButton.style.display =
+            "inline-block";
+
+        cancelButton.textContent =
+            "キャンセル";
+
+        cancelButton.onclick =
+            cancelForceCostCard;
+
+
+        confirmButton.style.display =
+            "inline-block";
+
+        confirmButton.textContent =
+            "決定";
+
+        confirmButton.onclick =
+            confirmForceCostCard;
+
+    }
+
+    //----------------------------------
+    // 未選択
+    //----------------------------------
+
+    else{
+
+        cancelButton.style.display =
+            "none";
+
+        confirmButton.style.display =
+            "none";
+
+    }
+
+
+    return;
+
+}
+
 
     //----------------------------------
 // マギア対象選択中
@@ -2605,7 +3140,7 @@ if(
         "inline-block";
 
         useButton.textContent =
-        "使用";
+        "プレイ";
 
         useButton.onclick = ()=>{
 
@@ -2649,7 +3184,7 @@ else if(
 
 
         useButton.textContent =
-            "使用";
+            "プレイ";
 
 
         useButton.onclick = ()=>{
@@ -2685,7 +3220,7 @@ else if(
         "inline-block";
 
         useButton.textContent =
-        "使用";
+        "プレイ";
 
         useButton.onclick = ()=>{
 
@@ -2894,7 +3429,6 @@ function findSummonByView(card){
 //=========================
 // クールモーダル表示
 //=========================
-
 function openCoolModal(
     owner = PLAYER,
     recoveryMode = false
@@ -2908,6 +3442,8 @@ function openCoolModal(
 
     selectedCoolCard = null;
 
+    updateButtons();
+
 
     //----------------------------------
     // 行動案内
@@ -2919,12 +3455,12 @@ function openCoolModal(
             "手札に戻すカードを選んでください"
         );
 
-    }else{
-
-        hideActionGuide();
-
     }
 
+
+    //----------------------------------
+    // モーダル取得
+    //----------------------------------
 
     const modal =
         document.getElementById(
@@ -2969,17 +3505,10 @@ function openCoolModal(
         //----------------------------------
 
         button.style.display =
-            "block";
-
-        button.textContent =
-            "戻すカードを決定";
-
-
-        // × は非表示
+            "none";
 
         xButton.style.display =
             "none";
-
 
     }else{
 
@@ -2987,13 +3516,8 @@ function openCoolModal(
         // 通常閲覧モード
         //----------------------------------
 
-        // 「戻すカードを決定」は非表示
-
         button.style.display =
             "none";
-
-
-        // × を表示
 
         xButton.style.display =
             "flex";
@@ -3001,13 +3525,11 @@ function openCoolModal(
     }
 
 
-
     //----------------------------------
     // カード一覧クリア
     //----------------------------------
 
     list.innerHTML = "";
-
 
 
     //----------------------------------
@@ -3027,17 +3549,12 @@ function openCoolModal(
     }
 
 
-
     //----------------------------------
-    // 表示するクールゾーン取得
+    // クールゾーン取得
     //----------------------------------
 
     const coolCards =
         getCoolCards(owner);
-
-    const handCards =
-        getHandCards(owner);
-
 
 
     //----------------------------------
@@ -3051,12 +3568,30 @@ function openCoolModal(
 
     }else{
 
-
         coolCards.forEach(card=>{
 
+            //----------------------------------
+            // カードを包む要素
+            //----------------------------------
+
+            const wrapper =
+                document.createElement(
+                    "div"
+                );
+
+
+            wrapper.className =
+                "cool-card-wrapper";
+
+
+            //----------------------------------
+            // カード画像
+            //----------------------------------
 
             const img =
-                document.createElement("img");
+                document.createElement(
+                    "img"
+                );
 
 
             img.src =
@@ -3067,6 +3602,37 @@ function openCoolModal(
                 "cool-card";
 
 
+            //----------------------------------
+            // 〇マーカー
+            //----------------------------------
+
+            const marker =
+                document.createElement(
+                    "div"
+                );
+
+
+            marker.className =
+                "card-marker";
+
+
+            marker.style.display =
+                "none";
+
+
+            //----------------------------------
+            // カードをラッパーへ追加
+            //----------------------------------
+
+            wrapper.appendChild(
+                img
+            );
+
+
+            wrapper.appendChild(
+                marker
+            );
+
 
             //----------------------------------
             // クールカードクリック
@@ -3074,86 +3640,124 @@ function openCoolModal(
 
             img.onclick = ()=>{
 
-
                 //----------------------------------
-                // カード詳細表示
-                //----------------------------------
-
-                showCardInfo(card);
-
-
-
-                //----------------------------------
-                // 閲覧モードの場合
+                // 通常閲覧モード
                 //----------------------------------
 
                 if(!coolRecoveryMode){
+
+                    showCardInfo(
+                        card
+                    );
 
                     return;
 
                 }
 
 
+                //----------------------------------
+                // 以前の通常カードの〇を解除
+                //----------------------------------
+
+                if(selectedInfoCard){
+
+                    selectedInfoCard.setSelected(
+                        false
+                    );
+
+                }
+
+
+                if(selectedHandCard){
+
+                    selectedHandCard.setSelected(
+                        false
+                    );
+
+                }
+
 
                 //----------------------------------
-                // 以前の選択解除
+                // 以前のクールカードの〇を解除
                 //----------------------------------
 
                 document
-                    .querySelectorAll(".cool-card")
-                    .forEach(c=>{
+                    .querySelectorAll(
+                        ".card-marker"
+                    )
+                    .forEach(
+                        oldMarker=>{
 
-                        c.classList.remove(
-                            "selected"
-                        );
+                            oldMarker.style.display =
+                                "none";
 
-                    });
-
-
-
-                //----------------------------------
-                // 選択表示
-                //----------------------------------
-
-                img.classList.add(
-                    "selected"
-                );
-
+                        }
+                    );
 
 
                 //----------------------------------
-                // 回収対象保存
+                // 今回のカードを選択
+                //----------------------------------
+
+                selectedInfoCard =
+                    card;
+
+
+                //----------------------------------
+                // クール回収対象
                 //----------------------------------
 
                 selectedCoolCard =
                     card;
 
 
+                //----------------------------------
+                // 今回の〇を表示
+                //----------------------------------
 
-                console.log(
+                marker.style.display =
+                    "block";
 
-                    "回収選択:",
 
-                    selectedCoolCard
+                //----------------------------------
+                // カード詳細表示
+                //----------------------------------
 
+                showCardInfo(
+                    card
                 );
 
+
+                //----------------------------------
+                // アクションボタン更新
+                //----------------------------------
+
+                updateButtons();
+
+
+                console.log(
+                    "クール回収選択:",
+                    selectedCoolCard
+                );
 
             };
 
 
+            //----------------------------------
+            // リストへ追加
+            //----------------------------------
 
-            list.appendChild(img);
-
+            list.appendChild(
+                wrapper
+            );
 
         });
 
     }
 
 
-
     //----------------------------------
-    // 表示
+    // モーダル表示
     //----------------------------------
 
     modal.style.display =
@@ -3164,8 +3768,23 @@ function openCoolModal(
         "active"
     );
 
-}
 
+    //----------------------------------
+    // モード別クラス
+    //----------------------------------
+
+    modal.classList.toggle(
+        "cool-recovery-mode",
+        coolRecoveryMode
+    );
+
+
+    modal.classList.toggle(
+        "cool-view-mode",
+        !coolRecoveryMode
+    );
+
+}
 
 //=========================
 // 相手クールゾーン 閲覧専用
@@ -3478,6 +4097,8 @@ function recoverCoolCards(owner){
     //----------------------------------
 
     selectedCoolCard = null;
+
+    updateButtons();
 
 
     document
@@ -4666,17 +5287,17 @@ function getMagiaTargetLog(target){
 
 function showActionGuide(message){
 
-        console.log(
+    console.log(
         "★ showActionGuide",
         message
     );
-
 
 
     const guide =
         document.getElementById(
             "action-guide"
         );
+
 
     const text =
         document.getElementById(
@@ -4691,15 +5312,25 @@ function showActionGuide(message){
     }
 
 
-    text.textContent =
+    //----------------------------------
+    // 案内文を表示
+    //
+    // <br> を改行として使用するため
+    // innerHTML を使用
+    //----------------------------------
+
+    text.innerHTML =
         message;
 
+
+    //----------------------------------
+    // ガイド表示
+    //----------------------------------
 
     guide.style.display =
         "block";
 
 }
-
 function hideActionGuide(){
 
         console.log(
@@ -5127,7 +5758,7 @@ function showCpuCardAction(
             },300);
 
 
-        },2000);
+        },3000);
 
 }
 
@@ -5201,21 +5832,29 @@ function updateWinStars(){
 
 
 //======================================
-// 1戦終了
-//======================================
-
-//======================================
 // 1戦終了処理
 //======================================
 
 function finishBattleGame(winner){
 
     console.log(
-        "1戦終了",
+        "================================"
+    );
+
+    console.log(
+        "1戦終了：",
         winner === PLAYER
             ? "PLAYER"
             : "ENEMY"
     );
+
+
+    //----------------------------------
+    // CPU・ゲーム処理を停止
+    //----------------------------------
+
+    game.state =
+        TURN_STATE.END;
 
 
     //----------------------------------
@@ -5241,22 +5880,17 @@ function finishBattleGame(winner){
 
 
     //----------------------------------
-    // 戦闘終了状態
-    //----------------------------------
-
-    game.state =
-        TURN_STATE.END;
-
-
-    //----------------------------------
     // 各種操作を停止
     //----------------------------------
 
     closeEnemyCoolModal();
+
     closeCoolModal();
 
     closeHandModal();
+
     closeSummonActionModal();
+
     closeCostView();
 
     resetAttackState();
@@ -5307,16 +5941,230 @@ function finishBattleGame(winner){
 
 
     //----------------------------------
-    // 次の戦闘開始
+    // 次のゲーム開始
     //----------------------------------
 
     setTimeout(()=>{
 
         hideMatchResult();
 
-        startNextGame();
+        startNextGame(
+            winner
+        );
 
-    }, 2000);
+    },2000);
+
+}
+
+
+
+//======================================
+// 次のゲーム開始
+// 前のゲームの敗者が先攻
+//======================================
+
+function startNextGame(winner){
+
+    console.log(
+        "================================"
+    );
+
+    console.log(
+        "===== 次の戦闘開始 ====="
+    );
+
+    //----------------------------------
+    // ゲーム終了状態解除
+    //----------------------------------
+
+    battleGameEnding = false;
+
+
+
+    //----------------------------------
+    // 次の先攻を決定
+    // 前のゲームの敗者
+    //----------------------------------
+
+    setNextFirstPlayer(
+        winner
+    );
+
+
+    //----------------------------------
+    // ゲーム番号を進める
+    //----------------------------------
+
+    matchGameNumber++;
+
+
+    //----------------------------------
+    // 次のゲームの先攻・後攻決定
+    //----------------------------------
+
+    decideFirstPlayerForMatch();
+
+
+    console.log(
+        "第" +
+        matchGameNumber +
+        "戦開始"
+    );
+
+    console.log(
+        "次のゲームの先攻：",
+        firstPlayer
+    );
+
+    console.log(
+        "次のゲームの後攻：",
+        secondPlayer
+    );
+
+
+    //----------------------------------
+    // モーダルを閉じる
+    //----------------------------------
+
+    closeEnemyCoolModal();
+
+    closeCoolModal();
+
+    closeHandModal();
+
+    closeSummonActionModal();
+
+    closeCostView();
+
+
+    //----------------------------------
+    // 選択状態リセット
+    //----------------------------------
+
+    clearHandSelection();
+
+    clearFieldSelection();
+
+    resetAttackState();
+
+
+    selectedHandCard = null;
+
+    summonCard = null;
+
+    selectedCostCards = [];
+
+    costConfirm = false;
+
+    selectedSummon = null;
+
+    selectedFieldCard = null;
+
+    selectedEnemySummon = null;
+
+    selectedCoolCard = null;
+
+
+    //----------------------------------
+    // クール・行動状態リセット
+    //----------------------------------
+
+    summonUsedThisTurn = false;
+
+    coolRecoveryMode = false;
+
+    coolViewMode = false;
+
+    currentCoolOwner = PLAYER;
+
+
+    //----------------------------------
+    // レジスト状態リセット
+    //----------------------------------
+
+    resistMode = false;
+
+    resistEvent = null;
+
+    selectableResistCards = [];
+
+    resistUsingCard = null;
+
+    selectedResistCostCards = [];
+
+    resistCostConfirm = false;
+
+
+    //----------------------------------
+    // ターン演出状態リセット
+    //----------------------------------
+
+    turnAnimation = false;
+
+
+    //----------------------------------
+    // ゲーム状態リセット
+    //----------------------------------
+
+    game.turn = 0;
+
+    game.currentPlayer =
+        firstPlayer;
+
+    game.state =
+        TURN_STATE.START;
+
+
+    //----------------------------------
+    // LIFEリセット
+    //----------------------------------
+
+    game.playerLife = 5;
+
+    game.enemyLife = 5;
+
+
+    //----------------------------------
+    // 1戦分の盤面を初期化
+    //----------------------------------
+
+    setupGame();
+
+
+    //----------------------------------
+    // 勝利数は維持
+    //----------------------------------
+
+    updateWinStars();
+
+
+    //----------------------------------
+    // LIFE表示
+    //----------------------------------
+
+    updateLifeDisplay();
+
+
+    //----------------------------------
+    // 先攻側から開始
+    //----------------------------------
+
+    if(
+        game.currentPlayer === PLAYER
+    ){
+
+        startTurn();
+
+    }else{
+
+        startCpuTurn();
+
+    }
+
+
+    console.log(
+        "================================"
+    );
 
 }
 
@@ -5335,12 +6183,21 @@ function finishMatch(winner){
             : "CPU WIN"
     );
 
+
     //----------------------------------
     // 次のゲームの先攻を決定
-    // 今回の敗者が次のゲームの先攻
+    // 勝者の反対側＝敗者が先攻
     //----------------------------------
 
-    setNextFirstPlayer(winner);
+    setNextFirstPlayer(
+        winner
+    );
+
+
+    console.log(
+        "次のゲームの先攻：",
+        nextFirstPlayer
+    );
 
 
     //----------------------------------
@@ -5349,7 +6206,6 @@ function finishMatch(winner){
 
     game.state =
         TURN_STATE.END;
-
 
     //----------------------------------
     // モーダルを閉じる
@@ -5383,7 +6239,7 @@ function finishMatch(winner){
 
 
     //----------------------------------
-    // 最終結果表示
+    // 結果表示
     //----------------------------------
 
     const overlay =
@@ -5406,8 +6262,8 @@ function finishMatch(winner){
 
         title.textContent =
             winner === PLAYER
-            ? "MATCH WIN"
-            : "MATCH LOSS";
+                ? "MATCH WIN"
+                : "MATCH LOSS";
 
 
         score.textContent =
@@ -5420,177 +6276,32 @@ function finishMatch(winner){
 
     }
 
-}
-
-
-//======================================
-// 次のゲーム開始
-//======================================
-
-function startNextGame(){
-
-    console.log(
-        "===== 次の戦闘開始 ====="
-    );
-
 
     //----------------------------------
-    // 次のゲーム番号へ
+    // 一定時間後に次のゲーム
     //----------------------------------
 
-    matchGameNumber++;
+    setTimeout(()=>{
 
+        overlay.classList.remove(
+            "show"
+        );
 
-    //----------------------------------
-    // 次のゲームの先攻を決定
-    //----------------------------------
-
-    decideFirstPlayerForMatch();
-
-
-    console.log(
-        "第" +
-        matchGameNumber +
-        "戦",
-        "先攻:",
-        firstPlayer,
-        "後攻:",
-        secondPlayer
-    );
-
-
-    //----------------------------------
-    // モーダル
-    //----------------------------------
-
-    closeEnemyCoolModal();
-    closeCoolModal();
-    closeHandModal();
-    closeSummonActionModal();
-    closeCostView();
-
-
-    //----------------------------------
-    // 選択状態
-    //----------------------------------
-
-    clearHandSelection();
-    clearFieldSelection();
-    resetAttackState();
-
-    selectedHandCard = null;
-    summonCard = null;
-    selectedCostCards = [];
-    costConfirm = false;
-    selectedSummon = null;
-    selectedFieldCard = null;
-    selectedEnemySummon = null;
-    selectedCoolCard = null;
-
-
-    //----------------------------------
-    // ターン状態
-    //----------------------------------
-
-    summonUsedThisTurn = false;
-
-    coolRecoveryMode = false;
-    coolViewMode = false;
-
-    currentCoolOwner = PLAYER;
-
-
-    //----------------------------------
-    // レジスト状態
-    //----------------------------------
-
-    resistMode = false;
-    resistEvent = null;
-    selectableResistCards = [];
-
-    resistUsingCard = null;
-    selectedResistCostCards = [];
-    resistCostConfirm = false;
-
-
-    //----------------------------------
-    // ターン演出
-    //----------------------------------
-
-    turnAnimation = false;
-
-
-    //----------------------------------
-    // ゲーム状態
-    //----------------------------------
-
-    game.turn = 0;
-
-
-    //----------------------------------
-    // ★ 先攻プレイヤーを設定
-    //----------------------------------
-
-    game.currentPlayer =
-        firstPlayer;
-
-
-    game.state =
-        TURN_STATE.START;
-
-
-    //----------------------------------
-    // LIFEリセット
-    //----------------------------------
-
-    game.playerLife = 5;
-    game.enemyLife = 5;
-
-
-    //----------------------------------
-    // 1戦分の盤面を完全初期化
-    //----------------------------------
-
-    setupGame();
-
-
-    //----------------------------------
-    // 対戦全体の勝利数は維持
-    //----------------------------------
-
-    updateWinStars();
-
-
-    //----------------------------------
-    // LIFE表示
-    //----------------------------------
-
-    updateLifeDisplay();
-
-
-    //----------------------------------
-    // 次のゲーム開始
-    //----------------------------------
-
-    if(
-        game.currentPlayer === PLAYER
-    ){
 
         //----------------------------------
-        // PLAYER先攻
+        // まだマッチ継続なら
         //----------------------------------
 
-        startTurn();
+        if(
+            playerWins < 2 &&
+            enemyWins < 2
+        ){
 
-    }else{
+            startNextGame();
 
-        //----------------------------------
-        // CPU先攻
-        //----------------------------------
+        }
 
-        startCpuTurn();
-
-    }
+    },3000);
 
 }
 
