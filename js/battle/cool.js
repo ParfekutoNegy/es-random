@@ -38,7 +38,6 @@ function openCoolView(){
     list.innerHTML = "";
 
 
-
     board.coolCards.forEach(card=>{
 
 
@@ -52,7 +51,6 @@ function openCoolView(){
 
         image.className =
             "cool-card";
-
 
 
         image.onclick = ()=>{
@@ -69,7 +67,6 @@ function openCoolView(){
             }
 
 
-
             document
             .querySelectorAll(".cool-card.selected")
             .forEach(element=>{
@@ -81,15 +78,12 @@ function openCoolView(){
             });
 
 
-
             image.classList.add(
                 "selected"
             );
 
 
-
             selectedCoolCard = card;
-
 
 
             console.log(
@@ -97,9 +91,10 @@ function openCoolView(){
                 selectedCoolCard
             );
 
+            updateButtons();
+
 
         };
-
 
 
         list.appendChild(image);
@@ -108,12 +103,10 @@ function openCoolView(){
     });
 
 
-
     modal.style.display =
         "block";
 
 }
-
 //======================================
 // クール追加共通処理
 //======================================
@@ -182,12 +175,19 @@ function addCardToCool(card){
 
 function recoverEnemyCoolCard(){
 
+    //----------------------------------
+    // 回収前確認
+    //----------------------------------
 
     console.log(
-        "回収前",
+        "CPUクール回収前",
         board.enemyCoolCards
     );
 
+
+    //----------------------------------
+    // クールカードがない場合
+    //----------------------------------
 
     if(
         board.enemyCoolCards.length === 0
@@ -202,38 +202,112 @@ function recoverEnemyCoolCard(){
     }
 
 
-    const card =
-    board.enemyCoolCards.shift();
+    //----------------------------------
+    // 回収するカード
+    //----------------------------------
 
+    const card =
+        board.enemyCoolCards[0];
+
+
+    if(!card){
+
+        console.log(
+            "CPUクール回収カード取得失敗"
+        );
+
+        return;
+
+    }
 
 
     console.log(
-        "回収カード",
+        "CPUクール回収カード",
         card.name
     );
 
 
+    //----------------------------------
+    // クールゾーンから削除
+    //----------------------------------
+
+    board.removeCoolCard(
+        card,
+        ENEMY
+    );
+
+
+    //----------------------------------
+    // 手札へ戻す
+    //----------------------------------
+
     card.area =
-    "enemyHand";
+        "enemyHand";
 
 
     card.setFaceDown(false);
 
+    card.setHorizontal(false);
+
+    card.setSelected(false);
+
+    card.setHighlight(false);
+
+    card.setCostSelected(false);
+
+
+    //----------------------------------
+    // 相手手札へ追加
+    //----------------------------------
 
     enemyHandCards.push(
         card
     );
 
 
-    console.log(
-        "回収後",
-        board.enemyCoolCards
+    //----------------------------------
+    // バトルログ
+    //----------------------------------
+
+    addBattleLog(
+        `CPU：${card.name}をクールゾーンから回収`
     );
 
 
+    //----------------------------------
+    // 表示更新
+    //----------------------------------
+
     updateEnemyZoneDisplay();
+
+
+    //----------------------------------
+    // クール表示更新
+    //----------------------------------
+
     board.updateCoolCount();
+
+
+    //----------------------------------
+    // モーダル更新
+    //----------------------------------
+
     refreshCoolModal();
+
+
+    //----------------------------------
+    // 回収後確認
+    //----------------------------------
+
+    console.log(
+        "CPUクール回収後",
+        board.enemyCoolCards
+    );
+
+    console.log(
+        "CPU手札",
+        enemyHandCards
+    );
 
 }
 
@@ -304,3 +378,4 @@ function resetSummonState(summon){
     summon.view.target = false;
 
 }
+
