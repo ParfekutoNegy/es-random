@@ -472,7 +472,6 @@ updateHighlight(){
 
 updateMarker(){
 
-
     //----------------------------------
     // リセット
     //----------------------------------
@@ -485,19 +484,25 @@ updateMarker(){
         "marker-target"
     );
 
+    this.markerElement.textContent =
+        "";
+
 
     //----------------------------------
-    // 対象優先
+    // 対象
     //----------------------------------
 
     if(this.target){
 
         this.markerElement.style.display =
-        "block";
+        "flex";
 
         this.markerElement.classList.add(
             "marker-target"
         );
+
+        this.markerElement.textContent =
+            "⚔";
 
         return;
 
@@ -522,8 +527,6 @@ updateMarker(){
     }
 
 }
-
-
 
 updateSelection(){
 
