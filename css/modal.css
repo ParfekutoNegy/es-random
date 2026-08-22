@@ -1,9 +1,12 @@
+/*==================================================
+  通知
+==================================================*/
+
 #notification{
 
     position:absolute;
 
     top:50%;
-
     left:50%;
 
     transform:
@@ -11,11 +14,13 @@
 
     display:none;
 
+    z-index:4000;
+
 }
 
 
 /*==================================================
-  共通モーダル
+  共通モーダル領域
 ==================================================*/
 
 #modal{
@@ -24,9 +29,12 @@
 
     inset:0;
 
-    display:block;
+    width:100%;
+    height:100%;
 
     pointer-events:none;
+
+    z-index:9000;
 
 }
 
@@ -39,28 +47,48 @@
 
     display:none;
 
-    pointer-events:auto;
-
     position:absolute;
 
-    top:60%;
+    /*==================================================
+      表示位置
+      左端を固定
+    ==================================================*/
 
-    left:36%;
+    top:86%;
+    left:18%;
+
+    /*
+      X方向には移動させない。
+      Y方向だけ中央合わせ。
+    */
 
     transform:
-        translate(-50%, -50%);
+        translateY(-50%);
 
-    width:auto;
 
-    min-width:160px;
+    /*==================================================
+      サイズ
+    ==================================================*/
 
-    max-width:90%;
+    width:max-content;
 
-    max-height:none;
+    min-width:180px;
 
-    overflow:visible;
+    max-width:80%;
+
+
+    /*==================================================
+      内側
+    ==================================================*/
 
     padding:15px;
+
+    box-sizing:border-box;
+
+
+    /*==================================================
+      表示
+    ==================================================*/
 
     background:
         rgba(0,0,0,0.92);
@@ -76,16 +104,26 @@
         0 6px 20px
         rgba(0,0,0,0.6);
 
-    box-sizing:border-box;
 
-    z-index:100;
+    /*==================================================
+      文字
+    ==================================================*/
 
     font-family:
         sans-serif;
 
-    font-size:14px;
+    font-size:18px;
 
     line-height:1.4;
+
+
+    /*==================================================
+      操作
+    ==================================================*/
+
+    pointer-events:auto;
+
+    z-index:100;
 
 }
 
@@ -99,17 +137,17 @@
 
     display:none;
 
-    position:fixed;
+    position:absolute;
 
     right:20px;
 
     width:max-content;
 
-    min-width:200px;
+    min-width:260px;
 
-    max-width:90vw;
+    max-width:80%;
 
-    min-height:120px;
+    min-height:140px;
 
     padding:8px;
 
@@ -132,7 +170,7 @@
     font-family:
         sans-serif;
 
-    font-size:14px;
+    font-size:18px;
 
     line-height:1.4;
 
@@ -147,7 +185,7 @@
 
 #cool-modal{
 
-    top:49%;
+    top:51%;
 
     transform:
         translateY(-50%);
@@ -161,7 +199,7 @@
 
 #enemy-cool-modal{
 
-    top:16%;
+    top:26%;
 
     transform:
         translateY(-50%);
@@ -183,7 +221,7 @@
 
     text-align:center;
 
-    font-size:12px;
+    font-size:20px;
 
     line-height:1.2;
 
@@ -260,7 +298,7 @@
 
 .cost-card img{
 
-    width:48px;
+    width:80px;
 
     height:auto;
 
@@ -270,7 +308,8 @@
 
     cursor:pointer;
 
-    transition:.2s;
+    transition:
+        transform 0.2s;
 
 }
 
@@ -289,7 +328,7 @@
 
 .cool-card{
 
-    width:48px;
+    width:80px;
 
     flex-shrink:0;
 
@@ -303,7 +342,7 @@
 
 #enemy-cool-list .cool-card{
 
-    width:48px;
+    width:80px;
 
 }
 
@@ -344,11 +383,9 @@
     position:absolute;
 
     top:6px;
-
     right:6px;
 
     width:26px;
-
     height:26px;
 
     padding:0;
@@ -358,7 +395,6 @@
     display:flex;
 
     align-items:center;
-
     justify-content:center;
 
     border:
@@ -377,8 +413,6 @@
 
     font-size:18px;
 
-    font-weight:normal;
-
     line-height:1;
 
     cursor:pointer;
@@ -387,10 +421,6 @@
 
 }
 
-
-/*==================================================
-  × ホバー
-==================================================*/
 
 #cost-modal > button:hover,
 #close-cool-x-button:hover,
@@ -416,40 +446,7 @@
 
     padding:6px 14px;
 
-    font-size:13px;
-
-    line-height:1.2;
-
-    font-weight:bold;
-
-    color:white;
-
-    background:black;
-
-    border:
-        1px solid white;
-
-    border-radius:6px;
-
-    cursor:pointer;
-
-}
-
-
-/*==================================================
-  相手クール
-  閉じるボタン
-==================================================*/
-
-#close-enemy-cool-button{
-
-    display:block;
-
-    margin:6px auto 0;
-
-    padding:6px 14px;
-
-    font-size:13px;
+    font-size:24px;
 
     line-height:1.2;
 
@@ -488,13 +485,13 @@
 
     display:none;
 
-    position:fixed;
+    position:absolute;
 
     top:10%;
-
-    left:3%;
+    left:0%;
 
     z-index:1000;
+
 
 }
 
@@ -507,7 +504,7 @@
 
     position:relative;
 
-    width:160px;
+    width:320px;
 
     padding:12px;
 
@@ -530,7 +527,7 @@
     font-family:
         sans-serif;
 
-    font-size:13px;
+    font-size:28px;
 
     line-height:1.4;
 
@@ -546,15 +543,12 @@
     position:absolute;
 
     top:6px;
-
     right:6px;
 
     width:26px;
-
     height:26px;
 
     margin:0;
-
     padding:0;
 
     box-sizing:border-box;
@@ -562,7 +556,6 @@
     display:flex;
 
     align-items:center;
-
     justify-content:center;
 
     border:
@@ -579,9 +572,7 @@
         Arial,
         sans-serif;
 
-    font-size:18px;
-
-    font-weight:normal;
+    font-size:20px;
 
     line-height:1;
 
@@ -591,10 +582,6 @@
 
 }
 
-
-/*==================================================
-  カード詳細モーダル × ホバー
-==================================================*/
 
 #close-hand-modal-x:hover{
 
@@ -611,9 +598,8 @@
 
 #hand-card-modal #info-image{
 
-    width:70px;
-
-    height:98px;
+    width:140px;
+    height:200px;
 
     margin:auto;
 
@@ -630,7 +616,7 @@
 
     margin-top:8px;
 
-    font-size:13px;
+    font-size:20px;
 
     line-height:1.4;
 
@@ -638,10 +624,6 @@
 
 }
 
-
-/*==================================================
-  カード名などの見出し
-==================================================*/
 
 #hand-card-modal #info-text h2{
 
@@ -651,7 +633,7 @@
 
     text-align:center;
 
-    font-size:14px;
+    font-size:20px;
 
     line-height:1.2;
 
@@ -667,7 +649,7 @@
 
 
 /*==================================================
-  カード詳細ボタンエリア
+  カード詳細ボタン
 ==================================================*/
 
 #hand-card-modal #info-buttons{
@@ -683,14 +665,9 @@
 }
 
 
-/*==================================================
-  カード詳細ボタン
-==================================================*/
-
 #hand-card-modal #info-buttons button{
 
     width:55px;
-
     height:25px;
 
     padding:0;
@@ -715,28 +692,11 @@
 }
 
 
-/*==================================================
-  カード詳細ボタン ホバー
-==================================================*/
-
 #hand-card-modal #info-buttons button:hover{
 
     background:white;
 
     color:black;
-
-}
-
-
-/*==================================================
-  使用ボタン
-==================================================*/
-
-#use-button{
-
-    width:120px;
-
-    height:40px;
 
 }
 
@@ -749,13 +709,91 @@
 
     display:none;
 
-    position:fixed;
+    position:absolute;
 
     bottom:8%;
-
     left:10%;
 
     z-index:1000;
+
+}
+
+
+/*==================================================
+  サモン操作モーダル本体
+==================================================*/
+
+#summon-action-modal-content{
+
+    width:140px;
+
+    background:white;
+
+    border-radius:10px;
+
+    padding:8px;
+
+    box-sizing:border-box;
+
+}
+
+
+/*==================================================
+  サモン画像
+==================================================*/
+
+#summon-info-image{
+
+    width:70px;
+    height:98px;
+
+    margin:auto;
+
+}
+
+
+/*==================================================
+  サモン情報
+==================================================*/
+
+#summon-info-text{
+
+    font-size:12px;
+
+}
+
+
+#summon-info-text h2{
+
+    font-size:14px;
+
+}
+
+
+/*==================================================
+  サモン操作ボタン
+==================================================*/
+
+#summon-action-buttons{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:6px;
+
+    margin-top:15px;
+
+}
+
+
+#summon-action-buttons button{
+
+    width:100%;
+
+    height:25px;
+
+    font-size:11px;
 
 }
 
@@ -849,13 +887,10 @@
 
     display:none;
 
-    position:fixed;
+    position:absolute;
 
-    right:10%;
-
-    bottom:22%;
-
-    transform:none;
+    right:20px;
+    bottom:175px;
 
     z-index:9999;
 
@@ -865,7 +900,7 @@
 
     justify-content:flex-end;
 
-    gap:8px;
+    gap:20px;
 
     padding:10px;
 
@@ -897,17 +932,17 @@
 
 #cost-action-area button{
 
-    width:100px;
+    width:200px;
 
-    height:36px;
+    height:72px;
 
-    font-size:15px;
+    font-size:30px;
 
     font-weight:bold;
 
     border:none;
 
-    border-radius:8px;
+    border-radius:10px;
 
     background:
         linear-gradient(
@@ -967,11 +1002,14 @@
 
 
 /*==================================================
-  サモン操作モーダル 初期状態
+  コストモーダル表示中の手札位置
 ==================================================*/
 
-#summon-action-modal{
+#hand-cards-area.cost-view-open{
 
-    display:none;
+    transform:
+        translateX(
+            var(--cost-hand-shift, 0px)
+        );
 
 }
