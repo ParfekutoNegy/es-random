@@ -66,6 +66,21 @@ function resetCpuTurnState(){
 
 function startCpuAction(){
 
+    //----------------------------------
+    // ゲーム終了後はCPU行動禁止
+    //----------------------------------
+
+    if(battleGameEnding){
+
+        console.log(
+            "CPU行動開始中止：ゲーム終了"
+        );
+
+        return;
+
+    }
+
+
     logCpuCardTotal();
 
     console.log(
@@ -94,6 +109,22 @@ function startCpuAction(){
 //======================================
 
 function runCpuTurnStep(){
+
+    //----------------------------------
+    // ゲーム終了後はCPU行動禁止
+    //----------------------------------
+
+    if(battleGameEnding){
+
+        console.log(
+            "CPU行動停止：ゲーム終了"
+        );
+
+        cpuWaiting = false;
+
+        return;
+
+    }
 
     //----------------------------------
     // プレイヤー操作待ち
@@ -514,6 +545,27 @@ enemyField.filter(summon=>{
 
 function cpuNextAttack(){
 
+
+    //----------------------------------
+    // ゲーム終了後はCPU攻撃禁止
+    //----------------------------------
+
+    if(battleGameEnding){
+
+        console.log(
+            "CPU攻撃停止：ゲーム終了"
+        );
+
+        cpuAttackQueue = [];
+
+        cpuAttackIndex = 0;
+
+        cpuWaiting = false;
+
+        return;
+
+    }
+
     console.log(
     "CPU次攻撃処理",
     "cpuTurnStep=",
@@ -589,6 +641,23 @@ function cpuNextAttack(){
 
     }
 
+
+    //----------------------------------
+    // ゲーム終了確認
+    //----------------------------------
+
+    if(battleGameEnding){
+
+        console.log(
+            "CPU攻撃中止：ゲーム終了"
+        );
+
+        cpuAttackQueue = [];
+        cpuAttackIndex = 0;
+
+        return;
+
+    }
 
     //----------------------------------
     // 攻撃役
@@ -1812,6 +1881,126 @@ function selectCpuMagiaTarget(card){
 
     const targets =
         card.effect.target;
+
+//======================================
+// フォローウィンド
+// 召喚したばかりで攻撃できないCPUサモンのみ対象
+//======================================
+
+if(
+    card.name === "フォローウィンド"
+){
+
+    const candidates =
+        enemyField.filter(
+            summon => {
+
+                //----------------------------------
+                // マギア対象不可
+                //----------------------------------
+
+                if(
+                    isMagiaTargetBlocked(
+                        card,
+                        summon
+                    )
+                ){
+
+                    return false;
+
+                }
+
+
+                //----------------------------------
+                // 横向きなら対象外
+                //----------------------------------
+
+                if(
+                    summon.isRest
+                ){
+
+                    return false;
+
+                }
+
+
+                //----------------------------------
+                // すでに攻撃可能なら対象外
+                //----------------------------------
+
+                if(
+                    summon.attackReady
+                ){
+
+                    return false;
+
+                }
+
+
+                //----------------------------------
+                // summonTurnAttack持ちは対象外
+                //----------------------------------
+
+                if(
+                    summon.card?.ability?.type ===
+                    "summonTurnAttack"
+                ){
+
+                    return false;
+
+                }
+
+
+                //----------------------------------
+                // ここまで来たら
+                // 「召喚ターンで攻撃できないサモン」
+                //----------------------------------
+
+                return true;
+
+            }
+        );
+
+
+    //----------------------------------
+    // 対象なし
+    //----------------------------------
+
+    if(
+        candidates.length === 0
+    ){
+
+        console.log(
+            "CPU：フォローウィンド対象なし"
+        );
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // 対象決定
+    //----------------------------------
+
+    const target =
+        candidates[
+            Math.floor(
+                Math.random() *
+                candidates.length
+            )
+        ];
+
+
+    console.log(
+        "CPU：フォローウィンド対象",
+        target.card.name
+    );
+
+
+    return target;
+
+}
 
 
     //======================================
