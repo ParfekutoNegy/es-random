@@ -154,15 +154,34 @@ function getRandomCardIds(
 
 function createTestHand(){
 
+    //----------------------------------
+    // 32枚からランダムに10枚
+    //----------------------------------
+
     const ids =
         getRandomCardIds(
             10,
-            playerStartingCardIds
+            []
         );
 
+
     console.log(
-        "★ プレイヤー初期手札ID",
+        "★ プレイヤー第1戦初期手札ID",
         ids
+    );
+
+
+    //----------------------------------
+    // 第1戦で使用した10枚を保存
+    //----------------------------------
+
+    playerStartingCardIds =
+        [...ids];
+
+
+    console.log(
+        "★ プレイヤー使用済みIDを保存",
+        playerStartingCardIds
     );
 
 
@@ -206,12 +225,174 @@ function createTestHand(){
     });
 
 
+    return hand;
+
+}
+
+//======================================
+// 2戦目以降の初期手札
+// 使用済み開始手札を除外して10枚取得
+//======================================
+
+
+function createNextGameHand(owner){
+
     //----------------------------------
-    // 今回の開始手札を記録
+    // プレイヤー / CPU の使用済みID
     //----------------------------------
 
-    playerStartingCardIds.push(
+    const usedIds =
+        owner === PLAYER
+            ? playerStartingCardIds
+            : enemyStartingCardIds;
+
+
+    //----------------------------------
+    // 使用済みカードを除外
+    //----------------------------------
+
+    const availableIds = [];
+
+
+    for(
+        let id = 1;
+        id <= 32;
+        id++
+    ){
+
+        if(
+            !usedIds.includes(id)
+        ){
+
+            availableIds.push(id);
+
+        }
+
+    }
+
+
+    console.log(
+        owner === PLAYER
+            ? "★ プレイヤー使用済みID"
+            : "★ CPU使用済みID",
+        [...usedIds]
+    );
+
+
+    console.log(
+        owner === PLAYER
+            ? "★ プレイヤー残りカードID"
+            : "★ CPU残りカードID",
+        [...availableIds]
+    );
+
+
+    //----------------------------------
+    // 残りカードをシャッフル
+    //----------------------------------
+
+    for(
+        let i = availableIds.length - 1;
+        i > 0;
+        i--
+    ){
+
+        const j =
+            Math.floor(
+                Math.random() * (i + 1)
+            );
+
+
+        [
+            availableIds[i],
+            availableIds[j]
+        ] =
+        [
+            availableIds[j],
+            availableIds[i]
+        ];
+
+    }
+
+
+    //----------------------------------
+    // 10枚取得
+    //----------------------------------
+
+    const ids =
+        availableIds.slice(
+            0,
+            10
+        );
+
+
+    console.log(
+        owner === PLAYER
+            ? "★ プレイヤー次戦初期手札ID"
+            : "★ CPU次戦初期手札ID",
+        ids
+    );
+
+
+    //----------------------------------
+    // カード作成
+    //----------------------------------
+
+    const hand = [];
+
+
+    ids.forEach(id=>{
+
+        const cardData =
+            CARD_LIST.find(
+                card => card.id === id
+            );
+
+
+        if(!cardData){
+
+            console.warn(
+                "次戦カードが見つかりません",
+                id
+            );
+
+            return;
+
+        }
+
+
+        const card =
+            createCard(
+                cardData,
+
+                owner === PLAYER
+                    ? "hand"
+                    : "enemyHand",
+
+                owner
+            );
+
+
+        hand.push(card);
+
+    });
+
+
+    //----------------------------------
+    // 今回使ったカードも保存
+    // 3戦目では第1戦 + 第2戦を除外する
+    //----------------------------------
+
+    usedIds.push(
         ...ids
+    );
+
+
+    console.log(
+        owner === PLAYER
+            ? "★ プレイヤー使用済みID更新"
+            : "★ CPU使用済みID更新",
+        [...usedIds]
     );
 
 
@@ -220,21 +401,41 @@ function createTestHand(){
 }
 
 
+
 //======================================
 // CPU初期手札
 //======================================
 
 function createEnemyTestHand(){
 
+    //----------------------------------
+    // 32枚からランダムに10枚
+    //----------------------------------
+
     const ids =
         getRandomCardIds(
             10,
-            enemyStartingCardIds
+            []
         );
 
+
     console.log(
-        "★ CPU初期手札ID",
+        "★ CPU第1戦初期手札ID",
         ids
+    );
+
+
+    //----------------------------------
+    // 第1戦で使用した10枚を保存
+    //----------------------------------
+
+    enemyStartingCardIds =
+        [...ids];
+
+
+    console.log(
+        "★ CPU使用済みIDを保存",
+        enemyStartingCardIds
     );
 
 
@@ -276,15 +477,6 @@ function createEnemyTestHand(){
         hand.push(card);
 
     });
-
-
-    //----------------------------------
-    // 今回の開始手札を記録
-    //----------------------------------
-
-    enemyStartingCardIds.push(
-        ...ids
-    );
 
 
     return hand;
