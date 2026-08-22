@@ -29,8 +29,23 @@ let selectableBlockSummons = [];
 let blockingSummon = null;
 
 
-
 function startAttack(summon){
+
+    //----------------------------------
+    // プレイヤーのターン以外は攻撃開始不可
+    //----------------------------------
+
+    if(
+        game.currentPlayer !== PLAYER
+    ){
+
+        console.log(
+            "プレイヤーのターンではないため攻撃不可"
+        );
+
+        return;
+
+    }
 
 
     if(!summon){
@@ -39,6 +54,28 @@ function startAttack(summon){
 
     }
 
+
+    //----------------------------------
+    // 自分のサモン以外は攻撃開始不可
+    //----------------------------------
+
+    if(
+        summon.owner !== PLAYER
+    ){
+
+        console.log(
+            "自分のサモンではないため攻撃不可",
+            summon.card.name
+        );
+
+        return;
+
+    }
+
+
+    //----------------------------------
+    // 召喚したターンは攻撃不可
+    //----------------------------------
 
     if(!summon.attackReady){
 
@@ -51,6 +88,10 @@ function startAttack(summon){
     }
 
 
+    //----------------------------------
+    // 行動済みサモン
+    //----------------------------------
+
     if(summon.isRest){
 
         console.log(
@@ -62,12 +103,17 @@ function startAttack(summon){
     }
 
 
+    //----------------------------------
+    // 攻撃開始
+    //----------------------------------
+
     attackingSummon = summon;
 
     attackMode = true;
 
+
     //----------------------------------
-    // ★ 攻撃対象選択案内
+    // 攻撃対象選択案内
     //----------------------------------
 
     showActionGuide(
@@ -85,6 +131,57 @@ function startAttack(summon){
         "攻撃開始",
         summon.card.name
     );
+
+}
+
+//======================================
+// アタック対象選択キャンセル
+//======================================
+
+function cancelAttack(){
+
+    console.log(
+        "アタック対象選択キャンセル"
+    );
+
+
+    //----------------------------------
+    // 攻撃対象発光解除
+    //----------------------------------
+
+    clearAttackHighlight();
+
+
+    //----------------------------------
+    // 攻撃状態解除
+    //----------------------------------
+
+    attackMode = false;
+
+    attackingSummon = null;
+
+    attackTarget = null;
+
+
+    //----------------------------------
+    // 案内を消す
+    //----------------------------------
+
+    hideActionGuide();
+
+
+    //----------------------------------
+    // ボタン更新
+    //----------------------------------
+
+    updateButtons();
+
+
+    //----------------------------------
+    // ゲーム状態更新
+    //----------------------------------
+
+    updateGameState();
 
 }
 
@@ -183,6 +280,25 @@ function canAttack(target){
     if(target instanceof Summon){
 
         //----------------------------------
+        // 自分の場のサモンには攻撃不可
+        //----------------------------------
+
+        if(
+            target.owner ===
+            attackingSummon.owner
+        ){
+
+            console.log(
+                "自分の場のサモンには攻撃不可",
+                target.card.name
+            );
+
+            return false;
+
+        }
+
+
+        //----------------------------------
         // タテ向きサモンへの攻撃
         //----------------------------------
 
@@ -207,7 +323,7 @@ function canAttack(target){
 
 
             //----------------------------------
-            // ケルピー
+            // タテ向き攻撃可能
             //----------------------------------
 
             console.log(
@@ -258,18 +374,19 @@ function executeAttack(
 
 
 //----------------------------------
-// バトルログ
+// バトルログ用情報
 //----------------------------------
 
 let attackerName =
-attacker.card.name;
+    attacker.card.name;
 
 let attackerOwner =
-attacker.owner === PLAYER
-? "PLAYER"
-: "CPU";
+    attacker.owner === PLAYER
+        ? "PLAYER"
+        : "CPU";
 
 let targetName;
+
 
 //----------------------------------
 // 攻撃対象
@@ -277,13 +394,8 @@ let targetName;
 
 if(target instanceof Summon){
 
-    const targetOwner =
-        target.owner === PLAYER
-            ? "PLAYER"
-            : "CPU";
-
     targetName =
-        `${target.card.name}`;
+        target.card.name;
 
 }
 else if(
@@ -311,26 +423,32 @@ else{
 
 }
 
+
+//----------------------------------
+// 攻撃可能確認
+//----------------------------------
+
+if(!canAttack(target)){
+
+    console.log(
+        "攻撃不可"
+    );
+
+    finishAttack();
+
+    return false;
+
+}
+
+
+//----------------------------------
+// 攻撃可能だった場合だけ
+// バトルログを表示
+//----------------------------------
+
 addBattleLog(
     `${attackerOwner}：${attackerName} → ${targetName}を攻撃`
 );
-
-
-    //----------------------------------
-    // 攻撃可能確認
-    //----------------------------------
-
-    if(!canAttack(target)){
-
-        console.log(
-            "攻撃不可"
-        );
-
-        finishAttack();
-
-        return false;
-
-    }
 
 
 
@@ -596,7 +714,6 @@ resolveBattle();
 }
 
 
-
     //----------------------------------
     // 戦闘終了処理
     //----------------------------------
@@ -617,149 +734,6 @@ setTimeout(()=>{
     //----------------------------------
 
     resolveBattle();
-
-
-    //----------------------------------
-    // バジリスク：バトル相手をクールへ
-    //----------------------------------
-
-    if(
-        attacker.card.ability?.type ===
-        "coolAfterBattle"
-    ){
-
-        const opponent =
-            attacker.battleOpponent;
-
-        if(opponent){
-
-            console.log(
-                "バジリスク能力：バトル相手をクールへ",
-                opponent.card.name
-            );
-
-
-            board.addCoolCard(
-                opponent.card,
-                opponent.owner
-            );
-
-
-            //----------------------------------
-            // 相手サモンがまだ場に残っている場合は削除
-            //----------------------------------
-
-            const field =
-                opponent.owner === PLAYER
-                ?
-                playerField
-                :
-                enemyField;
-
-
-            const index =
-                field.indexOf(opponent);
-
-
-            if(index !== -1){
-
-                if(opponent.owner === PLAYER){
-
-                    board.removePlayerCard(
-                        opponent.view
-                    );
-
-                }else{
-
-                    board.removeEnemyCard(
-                        opponent.view
-                    );
-
-                }
-
-
-                field.splice(
-                    index,
-                    1
-                );
-
-            }
-
-        }
-
-    }
-
-
-    //----------------------------------
-    // 相手側がバジリスクだった場合
-    //----------------------------------
-
-    if(
-        target instanceof Summon &&
-        target.card.ability?.type ===
-        "coolAfterBattle"
-    ){
-
-        const opponent =
-            target.battleOpponent;
-
-        if(opponent){
-
-            console.log(
-                "バジリスク能力：バトル相手をクールへ",
-                opponent.card.name
-            );
-
-
-            board.addCoolCard(
-                opponent.card,
-                opponent.owner
-            );
-
-
-            //----------------------------------
-            // 相手サモンがまだ場に残っている場合は削除
-            //----------------------------------
-
-            const field =
-                opponent.owner === PLAYER
-                ?
-                playerField
-                :
-                enemyField;
-
-
-            const index =
-                field.indexOf(opponent);
-
-
-            if(index !== -1){
-
-                if(opponent.owner === PLAYER){
-
-                    board.removePlayerCard(
-                        opponent.view
-                    );
-
-                }else{
-
-                    board.removeEnemyCard(
-                        opponent.view
-                    );
-
-                }
-
-
-                field.splice(
-                    index,
-                    1
-                );
-
-            }
-
-        }
-
-    }
 
 
     //----------------------------------
@@ -1219,6 +1193,12 @@ function checkGameOver(){
 
     if(game.playerLife <= 0){
 
+        //----------------------------------
+        // CPU行動を強制停止
+        //----------------------------------
+
+        battleGameEnding = true;
+
         finishBattleGame(
             ENEMY
         );
@@ -1233,6 +1213,12 @@ function checkGameOver(){
     //----------------------------------
 
     if(game.enemyLife <= 0){
+
+        //----------------------------------
+        // CPU行動を強制停止
+        //----------------------------------
+
+        battleGameEnding = true;
 
         finishBattleGame(
             PLAYER
