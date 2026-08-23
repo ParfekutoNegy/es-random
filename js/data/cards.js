@@ -11,7 +11,8 @@ const CARD_LIST = [
         ability: {
             type: "fireMagiaDamageUp",
             value: 2
-        }
+        },
+        text:"自分の【火】のマギアが与えるダメージは＋２される。"
     },
     {
         id: 2,
@@ -26,9 +27,8 @@ const CARD_LIST = [
         type: "elementCostDown",
         element: "火",
         value: 1
-    }
-
-
+    },
+        text:"自分の【火】のカードのコストは－１される。"
 
     },
     {
@@ -42,7 +42,8 @@ const CARD_LIST = [
         image: "images/003-フェニックス.jpg",
         ability: {
             type: "returnToHandOnCool"
-        }
+        },
+        text:"このカードが場からクールゾーンに置かれたとき、手札に戻す。"
     },
     {
         id: 4,
@@ -55,8 +56,9 @@ const CARD_LIST = [
         image: "images/004-ドラゴン.jpg",
         ability: {
         type: "turnPowerUp",
-        value: 2
+        value: 2,
     },
+        text:"自分のターン中、このカードのパワーは＋２される。" 
     },
     {
         id: 5,
@@ -70,7 +72,9 @@ const CARD_LIST = [
             target:["enemySummon","playerSummon"],
                 type:"powerUp",
                 value:2
-        }
+        },
+        tag:"サモン１体",
+        text:"このターン中、対象のパワーを＋２する。"
     },
     {
         id: 6,
@@ -84,7 +88,9 @@ const CARD_LIST = [
             target:["enemySummon" , "enemy","playerSummon"],
             type:"damage",
             value:1
-        }
+        },
+        tag:"相手、もしくはサモン１体",
+        text:"対象に１ダメージを与える。"
     },
     {
         id: 7,
@@ -98,7 +104,9 @@ const CARD_LIST = [
         target:["enemySummon" , "enemy","playerSummon"],
         type:"damage",
         value:3
-        }
+        },
+        tag:"相手、もしくはサモン１体",
+        text:"対象に３ダメージを与える。"
     },
     {
         id: 8,
@@ -112,7 +120,9 @@ const CARD_LIST = [
         target:["enemySummon" , "enemy","playerSummon"],
         type:"damage",
         value:5
-        }
+        },
+        tag:"相手、もしくはサモン１体",
+        text:"対象に５ダメージを与える。"
     },
     {
         id: 9,
@@ -125,8 +135,8 @@ const CARD_LIST = [
         image: "images/009-フェアリー.jpg",
         ability: {
             type: "fairyTurnEndReady"
-        }
-
+        },
+        text:"自分のターン終了時、自分のサモンをすべてタテ向きにする。"
 
     },
     {
@@ -141,7 +151,8 @@ const CARD_LIST = [
         ability: {
         type: "elementCostDown",
         element: "風",
-        value: 1}
+        value: 1},
+        text:"自分の【風】のカードのコストは－１される。"
     },
 
     {
@@ -153,7 +164,8 @@ const CARD_LIST = [
         power: 2,
         series:"basic",
         image: "images/011-ユニコーン.jpg",
-        ability: {type: "summonTurnAttack"}
+        ability: {type: "summonTurnAttack"},
+        text:"このカードは場に出たターンでもアタックできる。"
     },
     {
         id: 12,
@@ -166,11 +178,11 @@ const CARD_LIST = [
         image: "images/012-グリフォン.jpg",
         ability: {
             type: "cannotBeBlocked"
-        }
-
-
+        },
+        text:"このカードはブロックされない。"
 
     },
+
     {
         id: 13,
         name:"エアスラッシュ",
@@ -183,7 +195,9 @@ const CARD_LIST = [
             target:["enemy"],
             type:"damage",
             value:1
-        }
+        },
+        tag:"相手",
+        text:"対象に１ダメージを与える。"
 
     },
     {
@@ -194,7 +208,8 @@ const CARD_LIST = [
         cost: 1,
         series:"basic",
         image: "images/014-ウィンドプレッシャー.jpg",
-        text: "相手を対象とする。相手は手札のカードを1枚選んでコストゾーンにおく。",
+        tag:"相手",
+        text: "相手は手札を1枚選び、コストゾーンに伏せる。",
         effect: {
             type: "forceCost",
             target: ["enemy"]
@@ -208,7 +223,8 @@ const CARD_LIST = [
         cost: 1,
         series:"basic",
         image: "images/015-フォローウィンド.jpg",
-        text: "サモン1体を対象とする。そのサモンは場に出したターンでもアタックできる。", 
+        tag:"サモン1体",
+        text: "対象は場に出たターンでもアタックできる。", 
         effect: {  
             type: "attackReady",  
             target: ["playerSummon","enemySummon"]
@@ -225,7 +241,8 @@ const CARD_LIST = [
         trigger:"beforePlayerDamage",
         condition:rapidMoveCondition,
         effect:"rapidMove",
-        text:"アタックで受けるダメージを０にする"
+        condi:"自分がサモンからダメージを受けるとき",
+        text:"受けるダメージを０にする。"
     },
     {
         id: 17,
@@ -239,7 +256,8 @@ const CARD_LIST = [
         ability: {
         type: "enemyMagiaCostUp",
         value: 1
-        }
+        },
+        text:"相手のマギアのコストは＋１される。"
     },
     {
         id: 18,
@@ -254,7 +272,9 @@ const CARD_LIST = [
         type: "elementCostDown",
         element: "水",
         value: 1
-    }
+    },
+    text:"自分の【水】のカードのコストは－１される。"
+
     },
     {
         id: 19,
@@ -267,7 +287,8 @@ const CARD_LIST = [
         image: "images/019-ケルピー.jpg",
         ability: {
             type: "attackVerticalSummon"
-        }
+        },
+        text:"このカードはタテ向きのサモンにアタックできる。"
     },
     {
         id: 20,
@@ -280,7 +301,8 @@ const CARD_LIST = [
         image: "images/020-クラーケン.jpg",
         ability: {
             type: "cannotBeMagiaTarget"
-        }
+        },
+        text:"相手はこのカードをマギアの対象として選べない。"
     },
     {
         id: 21,
@@ -294,7 +316,9 @@ const CARD_LIST = [
         effect: {
         type: "returnToHand",
         target: ["playerCoolCard"]
-    }
+    },
+    tag:"自分のクールゾーンのカード１枚",
+    text:"対象を手札に戻す。"
     },
 
     {
@@ -309,10 +333,11 @@ const CARD_LIST = [
         effect: {
         type: "horizontal",
         target: ["playerVerticalSummon","enemyVerticalSummon"]
-    }
-
-
     },
+    tag:"タテ向きのサモン１体",
+    text:"対象をヨコ向きにする。"
+    },
+
     {
         id: 23,
         name:"リキッドヴェール",
@@ -324,8 +349,8 @@ const CARD_LIST = [
         trigger:["beforePlayerDamage","beforeSummonDamage"],  
         condition:liquidVeilCondition, 
         effect:"liquidVeil",
-        text:"相手のマギアによるダメージを2減らす。"
-
+        condi:"自分、もしくはサモン１体がマギアでダメージを受けるとき",
+        text:"受けるダメージを－２する。"
     },
     {
         id: 24,
@@ -338,7 +363,8 @@ const CARD_LIST = [
         trigger:"beforePlayerDamage",
         condition:waterBarrierCondition,
         effect:"waterBarrier",
-        text:"火のマギアからプレイヤーが受けるダメージを０にする。"
+        condi:"自分が【火】のマギアでダメージを受けるとき",
+        text:"受けるダメージを０にする。"
     },
     {
         id: 25,
@@ -353,7 +379,8 @@ const CARD_LIST = [
         type: "elementCostDown",
         element: "土",
         value: 1
-    }
+    },
+    text:"自分の【土】のカードのコストは－１される。"
     },
 
     {
@@ -367,7 +394,8 @@ const CARD_LIST = [
         image: "images/026-バジリスク.jpg",
         ability: { 
             type: "coolAfterBattle"
-        }
+        },
+        text:"このカードとバトルをしたサモンは、バトル後にクールゾーンに置く。"
     },
     {
         id: 27,
@@ -381,7 +409,8 @@ const CARD_LIST = [
         ability: {   
             type: "reducePlayerDamage",
             value: 1
-        }
+        },
+        text:"自分が受けるダメージは－１される。"
     },
     {
         id: 28,
@@ -394,7 +423,8 @@ const CARD_LIST = [
         image: "images/028-ゴーレム.jpg",
         ability: {
             type: "noDamageWhenBlocking"
-        }
+        },
+        text:"このカードはブロックしたとき、相手のサモンからダメージを受けない。"
     },
     {
         id: 29,
@@ -408,8 +438,9 @@ const CARD_LIST = [
         target:["enemySummon" ,"playerSummon"],
         type:"damage",
         value:2
-        }
-
+        },
+        tag:"サモン１体",
+        text:"２ダメージを与える。"
 
     },
     {
@@ -423,7 +454,8 @@ const CARD_LIST = [
         trigger:"beforePlayerDamage",
         condition:sandProtectCondition,
         effect:"sandProtect",
-        text:"ちょうど１のダメージを受けるとき、受けるダメージを０にしてこのカードを手札に戻す。"
+        condi:"自分が、ちょうど１のダメージを受けるとき",
+        text:"受けるダメージを０にしたあと、このカードを手札に戻す。"
     },
     {
         id: 31,
@@ -435,7 +467,8 @@ const CARD_LIST = [
         image: "images/031-ストーンガード.jpg",
         trigger:"beforePlayerDamage",
         effect:"stoneGuard",
-        text:"受けるダメージを3軽減する"
+        condi:"自分がダメージを受けるとき",
+        text:"受けるダメージを－３する。"
 
     },
     {
@@ -448,7 +481,8 @@ const CARD_LIST = [
         image: "images/032-グラウンドウォール.jpg",
         trigger:"beforePlayerDamage",
         effect:"groundwall",
-        text:"受けるダメージを5軽減する"
+        condi:"自分がダメージを受けるとき",
+        text:"受けるダメージを－５する。"
     },
     {
         id: 33,
