@@ -6675,7 +6675,3 @@ function hideMatchResult(){
     );
 
 }
-        "show"
-    );
-
-}
