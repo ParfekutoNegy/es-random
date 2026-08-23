@@ -716,7 +716,7 @@
 
 #cpu-card-action-target{
 
-    font-size:17px;
+    font-size:23px;
 
 }
 
@@ -806,7 +806,7 @@
 
     position:relative;
 
-    transform:translateX(250px);
+    transform:translateX(300px);
 
 }
 
@@ -891,7 +891,7 @@
 
     justify-content:center;
 
-    transform:translateX(-200px);
+    transform:translateX(-270px);
 
 }
 
@@ -981,7 +981,7 @@
 
     justify-content:center;
 
-    transform:translateX(-180px);
+    transform:translateX(-220px);
 
 }
 
