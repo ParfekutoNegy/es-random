@@ -575,8 +575,6 @@ addCoolCard(card, owner){
 
     this.updateCoolCount();
 
-    refreshCoolModal();
-
 }
 
 removeCoolCard(card, owner){
@@ -648,17 +646,6 @@ removeCoolCard(card, owner){
     //----------------------------------
 
     this.updateCoolCount();
-
-
-    //----------------------------------
-    // 回収中でなければモーダル更新
-    //----------------------------------
-
-    if(!coolRecoveryMode){
-
-        refreshCoolModal();
-
-    }
 
 }
 
@@ -878,7 +865,6 @@ if(magiaTargetMode){
 }
 
 }
-
 //======================================
 // プレイヤークールゾーン
 // クリックで閲覧モーダル
@@ -924,10 +910,12 @@ if(playerCoolDisplay){
             );
 
 
-            openCoolModal(
-                PLAYER,
-                false
-            );
+            //----------------------------------
+            // クールゾーン表示
+            // 開いていれば閉じる
+            //----------------------------------
+
+            openCoolView();
 
         }
     );
