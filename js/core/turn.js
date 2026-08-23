@@ -79,38 +79,34 @@ showTurnMessage(
         updateCostZoneView();
 
 
-        //----------------------------------
-        // ③ クール回収
-        //----------------------------------
+//----------------------------------
+// ③ クール回収
+//----------------------------------
 
-        const coolCards =
-
-            getCoolCards(
+const coolCards =
+    getCoolCards(
         game.currentPlayer
     );
 
 
-        //----------------------------------
-        // クールゾーンにカードがある場合
-        //----------------------------------
+//----------------------------------
+// クールゾーンにカードがある場合
+//----------------------------------
 
-        if(coolCards.length > 0){
+if(coolCards.length > 0){
 
-            openCoolModal(
-                game.currentPlayer,
-                true
-            );
+    startCoolRecovery();
 
-            return;
+    return;
 
-        }
+}
 
 
-        //----------------------------------
-        // クールが空
-        //----------------------------------
+//----------------------------------
+// クールが空
+//----------------------------------
 
-        finishCoolRecovery();
+finishCoolRecovery();
 
     }
 
@@ -122,34 +118,105 @@ showTurnMessage(
 // クール回収完了
 //======================================
 
+//======================================
+// クール回収完了
+//======================================
+
 function finishCoolRecovery(){
 
+    //----------------------------------
+    // 回収モード終了
+    //----------------------------------
+
+    coolRecoveryMode = false;
+
+    selectedCoolCard = null;
+
 
     //----------------------------------
-    // クール回収中なら停止
+    // クール回収用CSSクラスを解除
     //----------------------------------
 
-    if(coolRecoveryMode){
-
-        console.log(
-            "クール回収待ち"
+    const modal =
+        document.getElementById(
+            "cool-modal"
         );
 
-        return;
+
+    if(modal){
+
+        modal.classList.remove(
+            "cool-recovery-mode"
+        );
+
+        modal.classList.remove(
+            "cool-view-mode"
+        );
+
+        modal.style.display =
+            "none";
 
     }
 
 
+    //----------------------------------
+    // クールカードの選択・発光を解除
+    //----------------------------------
+
+    document
+        .querySelectorAll(
+            "#cool-list .cool-card"
+        )
+        .forEach(card => {
+
+            card.classList.remove(
+                "selected"
+            );
+
+            card.style.animation =
+                "none";
+
+            card.style.outline =
+                "none";
+
+        });
+
 
     //----------------------------------
-    // クール回収後に表示更新
+    // 〇を解除
+    //----------------------------------
+
+    document
+        .querySelectorAll(
+            "#cool-list .card-marker"
+        )
+        .forEach(marker => {
+
+            marker.style.display =
+                "none";
+
+        });
+
+
+    //----------------------------------
+    // 手札選択解除
     //----------------------------------
 
     clearHandSelection();
 
+
+    //----------------------------------
+    // 表示更新
+    //----------------------------------
+
     updateGameState();
 
     updateCostZoneView();
+
+
+    //----------------------------------
+    // ターン開始
+    //----------------------------------
 
     onTurnStart(
         game.currentPlayer
@@ -157,13 +224,12 @@ function finishCoolRecovery(){
 
 
     //----------------------------------
-    // ターン開始イベント
+    // プレイ開始
     //----------------------------------
 
     beginPlaying();
 
 }
-
 
 //======================================
 // プレイ開始
