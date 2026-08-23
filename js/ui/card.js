@@ -23,6 +23,8 @@ class Card {
     this.ability = cardData.ability || null;
     // 属性
     this.elementType = cardData.element || "";
+    this.tag = cardData.tag || "";
+    this.condi = cardData.condi || "";
  
     //----------------------------------
     // エリア
@@ -373,7 +375,9 @@ setSelected(flag = true){
             trigger: this.trigger,
             condition: this.condition,
             effect: this.effect,
-            ability: this.ability
+            ability: this.ability,
+            tag: this.tag,
+            condi: this.condi
 
         };
 
