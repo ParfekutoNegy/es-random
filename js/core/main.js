@@ -2393,6 +2393,22 @@ function openCostView(){
             "cost-modal"
         );
 
+    //----------------------------------
+    // すでに開いている場合
+    // → 閉じる
+    //----------------------------------
+
+    if(
+        modal &&
+        modal.style.display === "block"
+    ){
+
+        closeCostView();
+
+        return;
+
+    }
+
 
     //----------------------------------
     // コストゾーン表示更新
@@ -2408,14 +2424,16 @@ function openCostView(){
     modal.style.display =
         "block";
 
+
     //----------------------------------
     // 手札位置を調整
     //----------------------------------
 
     updateHandPositionForCost();
 
-
 }
+
+
 //=========================
 // コストモーダルを閉じる
 //=========================
@@ -2425,7 +2443,8 @@ function closeCostView(){
     document.getElementById(
         "cost-modal"
     ).style.display =
-    "none";
+        "none";
+
 
     //----------------------------------
     // 手札位置を元に戻す
@@ -3891,6 +3910,10 @@ function openCoolModal(
 // 相手クールゾーン 閲覧専用
 //=========================
 
+//======================================
+// 相手クールモーダル
+//======================================
+
 function openEnemyCoolModal(){
 
     console.log(
@@ -3910,17 +3933,80 @@ function openEnemyCoolModal(){
     );
 
 
+    if(!modal){
+
+        console.warn(
+            "相手クールモーダルが見つかりません"
+        );
+
+        return;
+
+    }
+
+
+    //----------------------------------
+    // 現在の表示状態
+    //----------------------------------
+
+    const display =
+        window.getComputedStyle(
+            modal
+        ).display;
+
+
+    console.log(
+        "★ 相手クールモーダル display =",
+        display
+    );
+
+
+    //----------------------------------
+    // 開いている場合
+    // → 閉じる
+    //----------------------------------
+
+    if(display !== "none"){
+
+        modal.style.display =
+            "none";
+
+        modal.classList.remove(
+            "active"
+        );
+
+        console.log(
+            "★ 相手クールモーダルを閉じました"
+        );
+
+        return;
+
+    }
+
+
+    //----------------------------------
+    // リスト取得
+    //----------------------------------
+
     const list =
         document.getElementById(
             "enemy-cool-list"
         );
 
 
-    console.log(
-        "★ enemy-cool-list =",
-        list
-    );
+    if(!list){
 
+        console.warn(
+            "相手クールリストが見つかりません"
+        );
+
+        return;
+
+    }
+
+
+    //----------------------------------
+    // 一覧クリア
+    //----------------------------------
 
     list.innerHTML = "";
 
@@ -3940,14 +4026,20 @@ function openEnemyCoolModal(){
     if(cards.length === 0){
 
         list.innerHTML =
-            "<p>カードはありません</p>";
+            "<p>カードがありません</p>";
 
     }else{
+
+        //----------------------------------
+        // クールカード表示
+        //----------------------------------
 
         cards.forEach(card=>{
 
             const img =
-                document.createElement("img");
+                document.createElement(
+                    "img"
+                );
 
 
             img.src =
@@ -3960,12 +4052,16 @@ function openEnemyCoolModal(){
 
             img.onclick = ()=>{
 
-                showCardInfo(card);
+                showCardInfo(
+                    card
+                );
 
             };
 
 
-            list.appendChild(img);
+            list.appendChild(
+                img
+            );
 
         });
 
@@ -3992,71 +4088,105 @@ function openEnemyCoolModal(){
 }
 
 
+//======================================
+// クールゾーン一覧を更新
+//======================================
 
-//=========================
-// クールモーダル更新
-//=========================
+function renderCoolModal(){
 
-function refreshCoolModal(){
-
-    //----------------------------------
-    // 自分クールモーダル
-    //----------------------------------
-
-    const playerModal =
+    const list =
         document.getElementById(
-            "cool-modal"
+            "cool-list"
         );
 
 
+    if(!list){
+
+        return;
+
+    }
+
+
+    //----------------------------------
+    // 一覧クリア
+    //----------------------------------
+
+    list.innerHTML = "";
+
+
+    //----------------------------------
+    // クールカード取得
+    //----------------------------------
+
+    const coolCards =
+        board.playerCoolCards;
+
+
+    //----------------------------------
+    // クールカードがない場合
+    //----------------------------------
+
     if(
-        playerModal &&
-        playerModal.style.display === "block"
+        coolCards.length === 0
     ){
 
-        //----------------------------------
-        // クール回収中は再オープンしない
-        //----------------------------------
+        list.innerHTML =
+            "<p>カードはありません</p>";
 
-        if(coolRecoveryMode){
+        return;
 
-            console.log(
-                "クール回収中のため自分クールモーダル再生成をスキップ"
-            );
+    }
 
-        }else{
 
-            openCoolModal(
-                PLAYER,
-                false
+    //----------------------------------
+    // クールカード表示
+    //----------------------------------
+
+    coolCards.forEach(
+        card=>{
+
+            const image =
+                document.createElement(
+                    "img"
+                );
+
+
+            image.src =
+                card.image;
+
+
+            image.className =
+                "cool-card";
+
+
+            //----------------------------------
+            // 通常閲覧
+            //----------------------------------
+
+            image.onclick = ()=>{
+
+                if(coolRecoveryMode){
+
+                    return;
+
+                }
+
+
+                showCardInfo(
+                    card
+                );
+
+            };
+
+
+            list.appendChild(
+                image
             );
 
         }
-
-    }
-
-
-    //----------------------------------
-    // 相手クールモーダル
-    //----------------------------------
-
-    const enemyModal =
-        document.getElementById(
-            "enemy-cool-modal"
-        );
-
-
-    if(
-        enemyModal &&
-        enemyModal.style.display === "block"
-    ){
-
-        openEnemyCoolModal();
-
-    }
+    );
 
 }
-
 
 //=========================
 // クールモーダルを閉じる
@@ -6541,6 +6671,10 @@ function hideMatchResult(){
 
 
     overlay.classList.remove(
+        "show"
+    );
+
+}
         "show"
     );
 
