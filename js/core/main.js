@@ -655,7 +655,14 @@ function createCard(
 
         // ★ サモン能力
         ability:
-        cardData.ability ?? null
+        cardData.ability ?? null,
+        // ★ マギア対象
+        tag:
+        cardData.tag ?? "",
+
+        // ★ レジスト条件
+        condi:
+        cardData.condi ?? ""
 
     });
 
@@ -1624,6 +1631,11 @@ function showCardInfo(card){
         "info-text"
     );
 
+
+    //----------------------------------
+    // カード画像
+    //----------------------------------
+
     image.innerHTML = "";
 
     const img =
@@ -1637,16 +1649,104 @@ function showCardInfo(card){
 
     image.appendChild(img);
 
+
+    //----------------------------------
+    // 種類による追加情報
+    //----------------------------------
+
+    let specialInfo = "";
+
+
+    //----------------------------------
+    // サモン
+    //----------------------------------
+
+    if(card.type === "サモン"){
+
+        specialInfo = `
+            <p>
+                パワー：${card.power ?? "-"}
+            </p>
+
+            <p>
+                能力：${card.text ?? ""}
+            </p>
+        `;
+
+    }
+
+
+    //----------------------------------
+    // マギア
+    //----------------------------------
+
+    else if(card.type === "マギア"){
+
+        specialInfo = `
+            <p>
+                対象：${card.tag || "-"}
+            </p>
+
+            <p>
+                効果：${card.text ?? ""}
+            </p>
+        `;
+
+    }
+
+
+    //----------------------------------
+    // レジスト
+    //----------------------------------
+
+    else if(card.type === "レジスト"){
+
+        specialInfo = `
+            <p>
+                条件：${card.condi || "-"}
+            </p>
+
+            <p>
+                効果：${card.text ?? ""}
+            </p>
+        `;
+
+    }
+
+
+    //----------------------------------
+    // その他
+    //----------------------------------
+
+    else{
+
+        specialInfo = `
+            <p>
+                ${card.text ?? ""}
+            </p>
+        `;
+
+    }
+
+
+    //----------------------------------
+    // カード情報
+    //----------------------------------
+
     text.innerHTML = `
+
         <h2>${card.name}</h2>
 
-        <p>コスト：${card.cost}</p>
+        <p>
+            コスト：${card.cost}
+        </p>
 
-        <p>種類：${card.type}</p>
+        <p>
+            種類：${card.type}
+        </p>
 
-        <p>パワー：${card.power ?? "-"}</p>
+        ${specialInfo}
 
-        <p>${card.text ?? ""}</p>
     `;
 
 
@@ -1659,11 +1759,12 @@ function showCardInfo(card){
     ).style.display =
     "flex";
 
+
     updateButtons();
+
     updateCardAction(card);
 
 }
-
 
 
 //=========================
@@ -2394,7 +2495,7 @@ function updateHandPositionForCost(){
             "69%";
 
         costModal.style.left =
-        "23%"
+        "28%"
 
 
         //----------------------------------
