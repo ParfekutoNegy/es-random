@@ -773,7 +773,6 @@ function cpuNextAttack(){
 //======================================
 // CPU攻撃対象選択
 //======================================
-
 function selectCpuAttackTarget(){
 
     //----------------------------------
@@ -801,6 +800,121 @@ function selectCpuAttackTarget(){
         "攻撃力=",
         attackerPower
     );
+
+
+    //----------------------------------
+    // ゴーレム特殊判断
+    //----------------------------------
+    // 相手の場にパワー3以上のサモンがいる場合
+    // ブロック用として温存する
+    //----------------------------------
+
+    if(
+        attackingSummon.card.name === "ゴーレム"
+    ){
+
+        const strongSummon =
+            playerField.some(
+                summon => {
+
+                    if(summon.destroyed){
+
+                        return false;
+
+                    }
+
+                    return (
+                        getPower(summon) >= 3
+                    );
+
+                }
+            );
+
+
+        if(strongSummon){
+
+            console.log(
+                "CPU：ゴーレムは攻撃しない",
+                "相手の場にパワー3以上のサモンあり"
+            );
+
+
+            return null;
+
+        }
+
+    }
+
+
+    //----------------------------------
+    // ドラゴン・クラーケン対策
+    //----------------------------------
+
+    if(
+        attackingSummon.card.name === "バジリスク"
+    ){
+
+        const dragonKrakenTargets =
+            playerField.filter(
+                summon => {
+
+                    if(summon.destroyed){
+                        return false;
+                    }
+
+                    //----------------------------------
+                    // 横向きのみ
+                    //----------------------------------
+
+                    if(!summon.isRest){
+                        return false;
+                    }
+
+                    //----------------------------------
+                    // ドラゴン・クラーケン
+                    //----------------------------------
+
+                    const name =
+                        summon.card.name;
+
+                    return (
+                        name === "ドラゴン" ||
+                        name === "クラーケン"
+                    );
+
+                }
+            );
+
+
+        if(
+            dragonKrakenTargets.length > 0
+        ){
+
+            //----------------------------------
+            // ドラゴン・クラーケンを優先
+            //----------------------------------
+
+            dragonKrakenTargets.sort(
+                (a,b)=>
+                    getPower(b)
+                    -
+                    getPower(a)
+            );
+
+
+            console.log(
+                "CPU攻撃対象：バジリスクで",
+                dragonKrakenTargets[0].card.name,
+                "を優先攻撃"
+            );
+
+
+            return dragonKrakenTargets[0];
+
+        }
+
+    }
+
 
 
     //----------------------------------
@@ -1030,33 +1144,274 @@ function cpuPlaySummon(){
     }
 
 
-    //----------------------------------
-    // コスト最大を選択
-    //----------------------------------
+    //======================================
+    // サモン選択
+    //======================================
 
-    candidates.sort(
-        (a,b)=>{
+    const hasDragonOrKraken =
+        cpuHasDragonOrKraken();
 
-            const costA =
-                getCurrentCardCost(
-                    a,
-                    ENEMY
+
+    let card = null;
+
+
+    //======================================
+    // ① ドラゴン・クラーケン対策
+    //======================================
+
+    if(hasDragonOrKraken){
+
+        //----------------------------------
+        // ゴーレム優先
+        //----------------------------------
+
+        card =
+            candidates.find(
+                c =>
+                    c.name === "ゴーレム"
+            );
+
+
+        //----------------------------------
+        // ゴーレムがなければ
+        // バジリスク
+        //----------------------------------
+
+        if(!card){
+
+            card =
+                candidates.find(
+                    c =>
+                        c.name === "バジリスク"
                 );
-
-            const costB =
-                getCurrentCardCost(
-                    b,
-                    ENEMY
-                );
-
-            return costB - costA;
 
         }
-    );
 
 
-    const card =
-        candidates[0];
+        if(card){
+
+            console.log(
+                "CPU：ドラゴン・クラーケン対策サモン",
+                card.name
+            );
+
+        }
+
+    }
+
+
+    //======================================
+    // ② ダメージマギアと
+    //    ウィルオウィスプの組み合わせ
+    //======================================
+
+    if(!card){
+
+        //----------------------------------
+        // CPU手札に
+        // ファイアボール
+        // パイロフレイム
+        // エクスプロジア
+        // のいずれかがあるか
+        //----------------------------------
+
+        const hasFireDamageMagia =
+            enemyHandCards.some(
+                c =>
+                    c.type === "マギア" &&
+                    (
+                        c.name === "ファイアボール" ||
+                        c.name === "パイロフレイム" ||
+                        c.name === "エクスプロジア"
+                    )
+            );
+
+
+        //----------------------------------
+        // 対象マギアを持っている場合
+        //----------------------------------
+
+        if(hasFireDamageMagia){
+
+            //----------------------------------
+            // コスト4
+            //----------------------------------
+
+            card =
+                candidates.find(
+                    c =>
+                        getCurrentCardCost(
+                            c,
+                            ENEMY
+                        ) === 4
+                );
+
+
+            if(card){
+
+                console.log(
+                    "CPU：ダメージマギアあり",
+                    "コスト4サモンを優先",
+                    card.name
+                );
+
+            }
+
+
+            //----------------------------------
+            // コスト4がなければコスト3
+            //----------------------------------
+
+            if(!card){
+
+                card =
+                    candidates.find(
+                        c =>
+                            getCurrentCardCost(
+                                c,
+                                ENEMY
+                            ) === 3
+                    );
+
+
+                if(card){
+
+                    console.log(
+                        "CPU：ダメージマギアあり",
+                        "コスト3サモンを優先",
+                        card.name
+                    );
+
+                }
+
+            }
+
+
+            //----------------------------------
+            // コスト4・3がなければ
+            // ウィルオウィスプ
+            //----------------------------------
+
+            if(!card){
+
+                card =
+                    candidates.find(
+                        c =>
+                            c.name ===
+                            "ウィルオウィスプ"
+                    );
+
+
+                if(card){
+
+                    console.log(
+                        "CPU：ダメージマギアあり",
+                        "ウィルオウィスプを優先"
+                    );
+
+                }
+
+            }
+
+
+            //----------------------------------
+            // ウィルオウィスプもなければ
+            // コスト2以下
+            //----------------------------------
+
+            if(!card){
+
+                const lowCostCandidates =
+                    candidates.filter(
+                        c =>
+                            getCurrentCardCost(
+                                c,
+                                ENEMY
+                            ) <= 2
+                    );
+
+
+                if(
+                    lowCostCandidates.length > 0
+                ){
+
+                    //----------------------------------
+                    // コスト2以下では
+                    // コストが高いものを優先
+                    //----------------------------------
+
+                    lowCostCandidates.sort(
+                        (a,b)=>{
+
+                            const costA =
+                                getCurrentCardCost(
+                                    a,
+                                    ENEMY
+                                );
+
+                            const costB =
+                                getCurrentCardCost(
+                                    b,
+                                    ENEMY
+                                );
+
+                            return costB - costA;
+
+                        }
+                    );
+
+
+                    card =
+                        lowCostCandidates[0];
+
+
+                    console.log(
+                        "CPU：ダメージマギアあり",
+                        "コスト2以下から選択",
+                        card.name
+                    );
+
+                }
+
+            }
+
+        }
+
+    }
+
+
+    //======================================
+    // ③ 特殊条件に該当しなければ
+    //    従来通りコスト最大
+    //======================================
+
+    if(!card){
+
+        candidates.sort(
+            (a,b)=>{
+
+                const costA =
+                    getCurrentCardCost(
+                        a,
+                        ENEMY
+                    );
+
+                const costB =
+                    getCurrentCardCost(
+                        b,
+                        ENEMY
+                    );
+
+                return costB - costA;
+
+            }
+        );
+
+
+        card =
+            candidates[0];
+
+    }
 
 
     //----------------------------------
@@ -1110,7 +1465,6 @@ function cpuPlaySummon(){
     );
 
 }
-
 
 //======================================
 // CPUサモン召喚
@@ -1443,20 +1797,52 @@ function cpuPlayMagia(){
                     );
 
 
-                //----------------------------------
-                // 手札を2枚残せるか
-                //----------------------------------
+//----------------------------------
+// 手札を2枚残せるか
+//----------------------------------
+//
+// 通常は使用後に2枚以上残す
+//
+// ただしエクスプロジアは、
+// プレイヤーの手札が2枚以下なら
+// 使用後にCPUの手札が2枚以下になっても使用可能
+//----------------------------------
 
-                if(
-                    enemyHandCards.length
-                    - 1
-                    - currentCost
-                    < 2
-                ){
+const playerHandCount =
+    board.handCards.length;
 
-                    return false;
 
-                }
+const isExplozia =
+    card.name === "エクスプロジア";
+
+
+const canIgnoreHandLimit =
+    isExplozia &&
+    playerHandCount <= 2;
+
+
+if(
+    !canIgnoreHandLimit &&
+    enemyHandCards.length
+    - 1
+    - currentCost
+    < 2
+){
+
+    console.log(
+        "CPU：手札温存のためマギア使用見送り",
+        card.name,
+        "CPU手札=",
+        enemyHandCards.length,
+        "使用後予想=",
+        enemyHandCards.length - 1 - currentCost,
+        "プレイヤー手札=",
+        playerHandCount
+    );
+
+    return false;
+
+}
 
 
                 return true;
@@ -2208,19 +2594,44 @@ if(
     const candidates = [];
 
 
-    //----------------------------------
-    // ダメージマギアか確認
-    //----------------------------------
-
-    const isDamageMagia =
-        card.effect.type === "damage";
+const isDamageMagia =
+    card.effect.type === "damage";
 
 
-    const damageValue =
-        Number(
-            card.effect.value
-        ) || 0;
+const damageValue =
+    Number(
+        card.effect.value
+    ) || 0;
 
+
+//======================================
+// ダメージマギア専用優先順位
+//======================================
+
+if(isDamageMagia){
+
+    const priorityTarget =
+        selectCpuDamageMagiaTarget(
+            card
+        );
+
+
+    if(priorityTarget){
+
+        console.log(
+            "CPU：ダメージマギア優先対象",
+            card.name,
+            priorityTarget === PLAYER
+                ? "PLAYER"
+                : priorityTarget.card.name
+        );
+
+
+        return priorityTarget;
+
+    }
+
+}
 
     //======================================
     // 自分サモン
@@ -5100,5 +5511,689 @@ function cpuShouldUseAttackSetupMagia(
 
 
     return true;
+
+}
+
+//======================================
+// ドラゴン・クラーケン判定
+//======================================
+
+function isDragonOrKraken(summon){
+
+    if(!summon){
+
+        return false;
+
+    }
+
+
+    const card =
+        summon.card || summon;
+
+
+    if(!card){
+
+        return false;
+
+    }
+
+
+    return (
+        card.name === "ドラゴン" ||
+        card.name === "クラーケン"
+    );
+
+}
+
+//======================================
+// プレイヤーの場に
+// ドラゴン・クラーケンがいるか
+//======================================
+
+function cpuHasDragonOrKraken(){
+
+    return playerField.some(
+        summon =>
+            isDragonOrKraken(summon)
+    );
+
+}
+
+//======================================
+// CPU ダメージマギア対象優先順位
+//======================================
+
+function selectCpuDamageMagiaTarget(card){
+
+    if(!card){
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // ダメージ量
+    //----------------------------------
+
+    const damageValue =
+        Number(
+            card.effect?.value
+        ) || 0;
+
+
+    if(damageValue <= 0){
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // ウィルオウィスプ確認
+    //----------------------------------
+
+    const hasWillOWisp =
+        enemyField.some(
+            summon =>
+                summon.card.name ===
+                "ウィルオウィスプ"
+        );
+
+
+    //----------------------------------
+    // 優先順位
+    //----------------------------------
+
+    let priority = [];
+
+
+    //----------------------------------
+    // エクスプロジア
+    //----------------------------------
+
+    if(
+        card.name ===
+        "エクスプロジア"
+    ){
+
+        priority = [
+            "dragon",
+            "power3to5",
+            "player"
+        ];
+
+    }
+
+
+    //----------------------------------
+    // パイロフレイム
+    //----------------------------------
+
+    else if(
+        card.name ===
+        "パイロフレイム"
+    ){
+
+        if(hasWillOWisp){
+
+            // エクスプロジアと同じ扱い
+            priority = [
+                "dragon",
+                "power3to5",
+                "player"
+            ];
+
+        }
+        else{
+
+            priority = [
+                "power3",
+                "power2",
+                "player"
+            ];
+
+        }
+
+    }
+
+
+    //----------------------------------
+    // ファイアボール
+    //----------------------------------
+
+    else if(
+        card.name ===
+        "ファイアボール"
+    ){
+
+        if(hasWillOWisp){
+
+            // パイロフレイムと同じ扱い
+            priority = [
+                "power3",
+                "power2",
+                "player"
+            ];
+
+        }
+        else{
+
+            priority = [
+                "power1",
+                "player"
+            ];
+
+        }
+
+    }
+
+
+    //----------------------------------
+    // 対象優先順位なし
+    //----------------------------------
+
+    else{
+
+        return null;
+
+    }
+
+
+    //======================================
+    // 倒せるサモンだけ取得
+    //======================================
+
+    const killableSummons =
+        playerField.filter(
+            summon => {
+
+                //----------------------------------
+                // 破壊済み
+                //----------------------------------
+
+                if(
+                    summon.destroyed
+                ){
+
+                    return false;
+
+                }
+
+
+                //----------------------------------
+                // パワー確認
+                //----------------------------------
+
+                const power =
+                    getPower(summon);
+
+
+                //----------------------------------
+                // ダメージで倒せない
+                //----------------------------------
+
+                if(
+                    power >
+                    damageValue
+                ){
+
+                    return false;
+
+                }
+
+
+                //----------------------------------
+                // 対象不可
+                //----------------------------------
+
+                if(
+                    isMagiaTargetBlocked(
+                        card,
+                        summon
+                    )
+                ){
+
+                    return false;
+
+                }
+
+
+                return true;
+
+            }
+        );
+
+
+    console.log(
+        "CPU：ダメージマギア対象候補",
+        card.name,
+        killableSummons.map(
+            summon =>
+                `${summon.card.name}(${getPower(summon)})`
+        )
+    );
+
+
+    //======================================
+    // 優先順位に従って選択
+    //======================================
+
+    for(
+        const rule of priority
+    ){
+
+        //----------------------------------
+        // ドラゴン
+        //----------------------------------
+
+        if(
+            rule === "dragon"
+        ){
+
+            const targets =
+                killableSummons.filter(
+                    summon =>
+                        summon.card.name ===
+                        "ドラゴン"
+                );
+
+
+            if(
+                targets.length > 0
+            ){
+
+                targets.sort(
+                    (a,b)=>
+                        getPower(b)
+                        -
+                        getPower(a)
+                );
+
+
+                console.log(
+                    "CPU：ダメージマギア対象",
+                    card.name,
+                    "→ ドラゴン"
+                );
+
+
+                return targets[0];
+
+            }
+
+        }
+
+
+        //----------------------------------
+        // パワー3～5
+        //----------------------------------
+
+        if(
+            rule === "power3to5"
+        ){
+
+            const targets =
+                killableSummons.filter(
+                    summon => {
+
+                        const power =
+                            getPower(summon);
+
+                        return (
+                            power >= 3 &&
+                            power <= 5
+                        );
+
+                    }
+                );
+
+
+            if(
+                targets.length > 0
+            ){
+
+                targets.sort(
+                    (a,b)=>
+                        getPower(b)
+                        -
+                        getPower(a)
+                );
+
+
+                console.log(
+                    "CPU：ダメージマギア対象",
+                    card.name,
+                    "→ パワー3～5"
+                );
+
+
+                return targets[0];
+
+            }
+
+        }
+
+
+        //----------------------------------
+        // パワー3
+        //----------------------------------
+
+        if(
+            rule === "power3"
+        ){
+
+            const targets =
+                killableSummons.filter(
+                    summon =>
+                        getPower(summon) === 3
+                );
+
+
+            if(
+                targets.length > 0
+            ){
+
+                console.log(
+                    "CPU：ダメージマギア対象",
+                    card.name,
+                    "→ パワー3"
+                );
+
+
+                return targets[0];
+
+            }
+
+        }
+
+
+        //----------------------------------
+        // パワー2
+        //----------------------------------
+
+        if(
+            rule === "power2"
+        ){
+
+            const targets =
+                killableSummons.filter(
+                    summon =>
+                        getPower(summon) === 2
+                );
+
+
+            if(
+                targets.length > 0
+            ){
+
+                console.log(
+                    "CPU：ダメージマギア対象",
+                    card.name,
+                    "→ パワー2"
+                );
+
+
+                return targets[0];
+
+            }
+
+        }
+
+
+        //----------------------------------
+        // パワー1
+        //----------------------------------
+
+        if(
+            rule === "power1"
+        ){
+
+            const targets =
+                killableSummons.filter(
+                    summon =>
+                        getPower(summon) === 1
+                );
+
+
+            if(
+                targets.length > 0
+            ){
+
+                console.log(
+                    "CPU：ダメージマギア対象",
+                    card.name,
+                    "→ パワー1"
+                );
+
+
+                return targets[0];
+
+            }
+
+        }
+
+
+        //----------------------------------
+        // プレイヤー
+        //----------------------------------
+
+        if(
+            rule === "player"
+        ){
+
+            console.log(
+                "CPU：ダメージマギア対象",
+                card.name,
+                "→ PLAYER"
+            );
+
+
+            return PLAYER;
+
+        }
+
+    }
+
+
+    //----------------------------------
+    // 対象なし
+    //----------------------------------
+
+    console.log(
+        "CPU：ダメージマギア対象なし",
+        card.name
+    );
+
+
+    return null;
+
+}
+
+//======================================
+// CPU サモン召喚優先順位
+//======================================
+
+function selectCpuSummonCandidate(candidates){
+
+    if(
+        !candidates ||
+        candidates.length === 0
+    ){
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // 特定ダメージマギアを手札に持っているか
+    //----------------------------------
+
+    const hasFireMagia =
+        enemyHandCards.some(
+            card =>
+                card.name === "ファイアボール" ||
+                card.name === "パイロフレイム" ||
+                card.name === "エクスプロジア"
+        );
+
+
+    //----------------------------------
+    // 特定マギアがない
+    // → 従来通りコスト最大
+    //----------------------------------
+
+    if(!hasFireMagia){
+
+        candidates.sort(
+            (a,b)=>{
+
+                const costA =
+                    getCurrentCardCost(
+                        a,
+                        ENEMY
+                    );
+
+                const costB =
+                    getCurrentCardCost(
+                        b,
+                        ENEMY
+                    );
+
+                return costB - costA;
+
+            }
+        );
+
+
+        return candidates[0];
+
+    }
+
+
+    //----------------------------------
+    // 特定マギアがある場合
+    //----------------------------------
+    //
+    // ① コスト4
+    // ② コスト3
+    // ③ ウィルオウィスプ
+    // ④ コスト2以下
+    //----------------------------------
+
+
+    //----------------------------------
+    // コスト4
+    //----------------------------------
+
+    const cost4 =
+        candidates.filter(
+            card =>
+                getCurrentCardCost(
+                    card,
+                    ENEMY
+                ) === 4
+        );
+
+
+    if(cost4.length > 0){
+
+        return cost4[0];
+
+    }
+
+
+    //----------------------------------
+    // コスト3
+    //----------------------------------
+
+    const cost3 =
+        candidates.filter(
+            card =>
+                getCurrentCardCost(
+                    card,
+                    ENEMY
+                ) === 3
+        );
+
+
+    if(cost3.length > 0){
+
+        return cost3[0];
+
+    }
+
+
+    //----------------------------------
+    // ウィルオウィスプ
+    //----------------------------------
+
+    const willOWisp =
+        candidates.find(
+            card =>
+                card.name ===
+                "ウィルオウィスプ"
+        );
+
+
+    if(willOWisp){
+
+        return willOWisp;
+
+    }
+
+
+    //----------------------------------
+    // コスト2以下
+    //----------------------------------
+
+    const lowCost =
+        candidates.filter(
+            card =>
+                getCurrentCardCost(
+                    card,
+                    ENEMY
+                ) <= 2
+        );
+
+
+    if(lowCost.length > 0){
+
+        //----------------------------------
+        // 低コスト内では高いものを優先
+        //----------------------------------
+
+        lowCost.sort(
+            (a,b)=>{
+
+                const costA =
+                    getCurrentCardCost(
+                        a,
+                        ENEMY
+                    );
+
+                const costB =
+                    getCurrentCardCost(
+                        b,
+                        ENEMY
+                    );
+
+                return costB - costA;
+
+            }
+        );
+
+
+        return lowCost[0];
+
+    }
+
+
+    //----------------------------------
+    // 念のため
+    //----------------------------------
+
+    return candidates[0];
 
 }
