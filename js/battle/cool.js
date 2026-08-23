@@ -17,10 +17,6 @@ function moveToCool(card){
 }
 
 
-//======================================
-// クールゾーンを開く
-//======================================
-
 function openCoolView(){
 
     const modal =
@@ -29,84 +25,60 @@ function openCoolView(){
         );
 
 
-    const list =
-        document.getElementById(
-            "cool-list"
-        );
+    if(!modal){
+
+        return;
+
+    }
 
 
-    list.innerHTML = "";
+    //----------------------------------
+    // クール回収中は閲覧不可
+    //----------------------------------
+
+    if(coolRecoveryMode){
+
+        return;
+
+    }
 
 
-    board.coolCards.forEach(card=>{
+    //----------------------------------
+    // 開いているなら閉じる
+    //----------------------------------
+
+    const display =
+        window.getComputedStyle(
+            modal
+        ).display;
 
 
-        const image =
-            document.createElement("img");
+    if(display !== "none"){
+
+        modal.style.display =
+            "none";
+
+        return;
+
+    }
 
 
-        image.src =
-            card.image;
+    //----------------------------------
+    // クール一覧生成
+    //----------------------------------
+
+    renderCoolModal();
 
 
-        image.className =
-            "cool-card";
-
-
-        image.onclick = ()=>{
-
-
-            //----------------------------------
-            // 閲覧モード
-            //----------------------------------
-
-            if(!coolRecoveryMode){
-
-                return;
-
-            }
-
-
-            document
-            .querySelectorAll(".cool-card.selected")
-            .forEach(element=>{
-
-                element.classList.remove(
-                    "selected"
-                );
-
-            });
-
-
-            image.classList.add(
-                "selected"
-            );
-
-
-            selectedCoolCard = card;
-
-
-            console.log(
-                "回収選択:",
-                selectedCoolCard
-            );
-
-            updateButtons();
-
-
-        };
-
-
-        list.appendChild(image);
-
-
-    });
-
+    //----------------------------------
+    // 表示
+    //----------------------------------
 
     modal.style.display =
         "block";
 
 }
+
 //======================================
 // クール追加共通処理
 //======================================
@@ -288,12 +260,6 @@ function recoverEnemyCoolCard(){
     board.updateCoolCount();
 
 
-    //----------------------------------
-    // モーダル更新
-    //----------------------------------
-
-    refreshCoolModal();
-
 
     //----------------------------------
     // 回収後確認
@@ -379,3 +345,468 @@ function resetSummonState(summon){
 
 }
 
+//======================================
+// クール回収開始
+//======================================
+
+function startCoolRecovery(){
+
+    //----------------------------------
+    // クールカードがない
+    //----------------------------------
+
+    if(
+        board.playerCoolCards.length === 0
+    ){
+
+        console.log(
+            "クールゾーンが空なので回収不要"
+        );
+
+        return;
+
+    }
+
+
+    //----------------------------------
+    // 回収モード開始
+    //----------------------------------
+
+    coolRecoveryMode = true;
+
+    selectedCoolCard = null;
+
+
+    //----------------------------------
+    // アクション案内
+    //----------------------------------
+
+    showActionGuide(
+        "手札に戻すカードを選んでください"
+    );
+
+
+    //----------------------------------
+    // モーダルを作り直す
+    //----------------------------------
+
+    openCoolRecoveryModal();
+
+}
+
+//======================================
+// クール回収モーダル
+//======================================
+
+function openCoolRecoveryModal(){
+
+    const modal =
+        document.getElementById(
+            "cool-modal"
+        );
+
+
+    const list =
+        document.getElementById(
+            "cool-list"
+        );
+
+
+    if(!modal || !list){
+
+        console.warn(
+            "クールモーダル要素がありません"
+        );
+
+        return;
+
+    }
+
+
+    //----------------------------------
+    // 一覧をクリア
+    //----------------------------------
+
+    list.innerHTML = "";
+
+
+    //----------------------------------
+    // 選択解除
+    //----------------------------------
+
+    selectedCoolCard = null;
+
+
+    //----------------------------------
+    // クールカード表示
+    //----------------------------------
+
+    board.playerCoolCards.forEach(
+        card=>{
+
+            const wrapper =
+                document.createElement(
+                    "div"
+                );
+
+
+            wrapper.className =
+                "cool-card-wrapper";
+
+
+            //----------------------------------
+            // カード画像
+            //----------------------------------
+
+            const image =
+                document.createElement(
+                    "img"
+                );
+
+
+            image.src =
+                card.image;
+
+
+            image.className =
+                "cool-card";
+
+
+            //----------------------------------
+            // 〇マーカー
+            //----------------------------------
+
+            const marker =
+                document.createElement(
+                    "div"
+                );
+
+
+            marker.className =
+                "card-marker";
+
+
+            marker.style.display =
+                "none";
+
+
+            //----------------------------------
+            // 追加
+            //----------------------------------
+
+            wrapper.appendChild(
+                image
+            );
+
+            wrapper.appendChild(
+                marker
+            );
+
+
+            //----------------------------------
+            // カードクリック
+            //----------------------------------
+
+            image.onclick = ()=>{
+
+                if(!coolRecoveryMode){
+
+                    return;
+
+                }
+
+
+                //----------------------------------
+                // 以前の選択を解除
+                //----------------------------------
+
+                document
+                    .querySelectorAll(
+                        "#cool-list .card-marker"
+                    )
+                    .forEach(
+                        oldMarker=>{
+
+                            oldMarker.style.display =
+                                "none";
+
+                        }
+                    );
+
+
+                //----------------------------------
+                // 選択カード設定
+                //----------------------------------
+
+                selectedCoolCard =
+                    card;
+
+
+                //----------------------------------
+                // 〇表示
+                //----------------------------------
+
+                marker.style.display =
+                    "block";
+
+
+                //----------------------------------
+                // カード詳細
+                //----------------------------------
+
+                showCardInfo(
+                    card
+                );
+
+
+                //----------------------------------
+                // アクションボタン更新
+                //----------------------------------
+
+                updateButtons();
+
+
+                console.log(
+                    "クール回収選択:",
+                    card.name
+                );
+
+            };
+
+
+            list.appendChild(
+                wrapper
+            );
+
+        }
+    );
+
+
+    //----------------------------------
+    // 回収モード
+    //----------------------------------
+
+    modal.classList.add(
+        "cool-recovery-mode"
+    );
+
+
+    //----------------------------------
+    // モーダル表示
+    //----------------------------------
+
+    modal.style.display =
+        "block";
+
+
+    //----------------------------------
+    // アクションボタン更新
+    //----------------------------------
+
+    updateButtons();
+
+}
+
+
+//======================================
+// クール回収決定
+//======================================
+
+function confirmCoolRecovery(){
+
+    //----------------------------------
+    // 選択されていない
+    //----------------------------------
+
+    if(!selectedCoolCard){
+
+        console.log(
+            "クール回収カードが選択されていません"
+        );
+
+        return;
+
+    }
+
+
+    const card =
+        selectedCoolCard;
+
+
+    console.log(
+        "クール回収決定:",
+        card.name
+    );
+
+
+    //----------------------------------
+    // クールゾーンから削除
+    //----------------------------------
+
+    board.removeCoolCard(
+        card,
+        PLAYER
+    );
+
+
+    //----------------------------------
+    // カード状態を手札用に戻す
+    //----------------------------------
+
+    card.area =
+        "hand";
+
+    card.setFaceDown(
+        false
+    );
+
+    card.setHorizontal(
+        false
+    );
+
+    card.setSelected(
+        false
+    );
+
+    card.setHighlight(
+        false
+    );
+
+    card.setCostSelected(
+        false
+    );
+
+
+    //----------------------------------
+    // 手札へ追加
+    //----------------------------------
+
+    board.addHandCard(
+        card
+    );
+
+
+    //----------------------------------
+    // 選択解除
+    //----------------------------------
+
+    selectedCoolCard =
+        null;
+
+
+    //----------------------------------
+    // 回収モード終了
+    //----------------------------------
+
+    coolRecoveryMode =
+        false;
+
+
+    //----------------------------------
+    // モーダルを閉じる
+    //----------------------------------
+
+    const modal =
+        document.getElementById(
+            "cool-modal"
+        );
+
+
+    if(modal){
+
+        modal.classList.remove(
+            "cool-recovery-mode"
+        );
+
+        modal.style.display =
+            "none";
+
+    }
+
+
+    //----------------------------------
+    // 案内を消す
+    //----------------------------------
+
+    hideActionGuide();
+
+
+    //----------------------------------
+    // 表示更新
+    //----------------------------------
+
+    updateGameState();
+
+    updateCostZoneView();
+
+    updateButtons();
+
+    updateUsableCardHighlight();
+
+
+    console.log(
+        "クール回収完了"
+    );
+
+}
+
+//======================================
+// クールモーダル更新
+//======================================
+
+function refreshCoolModal(){
+
+    //----------------------------------
+    // 自分クール
+    //----------------------------------
+
+    const playerModal =
+        document.getElementById(
+            "cool-modal"
+        );
+
+
+    if(
+        playerModal &&
+        playerModal.style.display === "block"
+    ){
+
+        //----------------------------------
+        // 回収中は更新しない
+        //----------------------------------
+
+        if(coolRecoveryMode){
+
+            console.log(
+                "クール回収中のため自分クールモーダル更新をスキップ"
+            );
+
+        }else{
+
+            renderCoolModal();
+
+        }
+
+    }
+
+
+    //----------------------------------
+    // 相手クール
+    //----------------------------------
+
+    const enemyModal =
+        document.getElementById(
+            "enemy-cool-modal"
+        );
+
+
+    if(
+        enemyModal &&
+        enemyModal.style.display === "block"
+    ){
+
+        openEnemyCoolModal();
+
+    }
+
+}
