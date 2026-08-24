@@ -692,6 +692,7 @@ function onCardClick(card){
         card
     );
 
+
 //----------------------------------
 // クール回収モード
 //----------------------------------
@@ -699,30 +700,14 @@ function onCardClick(card){
 if(coolRecoveryMode){
 
     //----------------------------------
-    // 前回の通常カード選択解除
-    //----------------------------------
-
-    if(selectedInfoCard){
-
-        selectedInfoCard.setSelected(false);
-
-    }
-
-
-    if(selectedHandCard){
-
-        selectedHandCard.setSelected(false);
-
-    }
-
-
-    //----------------------------------
-    // クールカードの〇を解除
+    // クールモーダルの〇を解除
     //----------------------------------
 
     document
-        .querySelectorAll(".card-marker")
-        .forEach(marker=>{
+        .querySelectorAll(
+            "#cool-list .card-marker"
+        )
+        .forEach(marker => {
 
             marker.style.display =
                 "none";
@@ -731,18 +716,54 @@ if(coolRecoveryMode){
 
 
     //----------------------------------
-    // クールカード以外をクリック
+    // 手札の選択をすべて解除
+    //----------------------------------
+
+    if(board.handCards){
+
+        board.handCards.forEach(handCard => {
+
+            handCard.setSelected(false);
+
+        });
+
+    }
+
+
+    //----------------------------------
+    // クールゾーンのカード選択を解除
+    //----------------------------------
+
+    if(board.playerCoolCards){
+
+        board.playerCoolCards.forEach(coolCard => {
+
+            coolCard.setSelected(false);
+
+        });
+
+    }
+
+
+    //----------------------------------
+    // 選択情報をリセット
+    //----------------------------------
+
+    selectedInfoCard =
+        null;
+
+    selectedHandCard =
+        null;
+
+    selectedCoolCard =
+        null;
+
+
+    //----------------------------------
+    // クールゾーン以外をクリック
     //----------------------------------
 
     if(card.area !== "cool"){
-
-        //----------------------------------
-        // クール回収対象解除
-        //----------------------------------
-
-        selectedCoolCard =
-            null;
-
 
         //----------------------------------
         // 今回のカードを選択
@@ -756,6 +777,18 @@ if(coolRecoveryMode){
 
 
         //----------------------------------
+        // 手札なら手札選択として保存
+        //----------------------------------
+
+        if(card.area === "hand"){
+
+            selectedHandCard =
+                card;
+
+        }
+
+
+        //----------------------------------
         // カード詳細表示
         //----------------------------------
 
@@ -765,7 +798,7 @@ if(coolRecoveryMode){
 
 
         //----------------------------------
-        // アクションボタン更新
+        // ボタン更新
         //----------------------------------
 
         updateButtons();
@@ -777,7 +810,7 @@ if(coolRecoveryMode){
 
 
     //----------------------------------
-    // クールカードをクリックした場合
+    // クールゾーンをクリック
     //----------------------------------
 
     selectedInfoCard =
@@ -789,7 +822,7 @@ if(coolRecoveryMode){
 
 
     //----------------------------------
-    // カード選択
+    // クールカードを選択
     //----------------------------------
 
     card.setSelected(true);
@@ -805,7 +838,7 @@ if(coolRecoveryMode){
 
 
     //----------------------------------
-    // アクションボタン更新
+    // ボタン更新
     //----------------------------------
 
     updateButtons();
@@ -814,31 +847,22 @@ if(coolRecoveryMode){
     return;
 
 }
-    //----------------------------------
-    // マギア対象選択中
-    //----------------------------------
-
-    if(magiaTargetMode){
-
-        hideActionGuide();
-
-    }
 
 
-    if(forceCostMode){
+//----------------------------------
+// マギア対象選択中
+//----------------------------------
 
-        if(
-            card.area === "hand" &&
-            forceCostPlayer === PLAYER
-        ){
+if(magiaTargetMode){
 
-            selectForceCostCard(card);
+    hideActionGuide();
 
-        }
+}
 
-        return;
 
-    }
+//----------------------------------
+// 強制コスト選択中
+//----------------------------------
 
 if(forceCostMode){
 
@@ -892,7 +916,8 @@ if(
     // 今回のカードを選択
     //----------------------------------
 
-    selectedInfoCard = card;
+    selectedInfoCard =
+        card;
 
     card.setSelected(true);
 
@@ -908,118 +933,127 @@ if(
 
 }
 
-    //----------------------------------
-    // ターン演出中
-    //----------------------------------
-    if(turnAnimation){
-        return;
-    }
 
-    //----------------------------------
-    // 攻撃中は手札操作禁止
-    //----------------------------------
+//----------------------------------
+// ターン演出中
+//----------------------------------
 
-    if(
-        summonCard &&
-        !resistMode &&
-        (
-            card.area === "field" ||
-            card.area === "enemyField"
-        )
+if(turnAnimation){
 
-    ){
-        return;
-    }
+    return;
+
+}
 
 
-    //----------------------------------
-    // コスト選択中は場操作禁止
-    //----------------------------------
+//----------------------------------
+// 攻撃中は手札操作禁止
+//----------------------------------
 
-    if(
-        summonCard &&
-        (
-            card.area === "field" ||
-            card.area === "enemyField"
-        )
-    ){
+if(
+    summonCard &&
+    !resistMode &&
+    (
+        card.area === "field" ||
+        card.area === "enemyField"
+    )
+){
 
-        return;
-    }
+    return;
 
-    console.log(
-        "クリックカード",
-        card,
-        "area=",
-        card.area
-    );
+}
+
+
+//----------------------------------
+// コスト選択中は場操作禁止
+//----------------------------------
+
+if(
+    summonCard &&
+    (
+        card.area === "field" ||
+        card.area === "enemyField"
+    )
+){
+
+    return;
+
+}
+
+
+console.log(
+    "クリックカード",
+    card,
+    "area=",
+    card.area
+);
 
 
 //----------------------------------
 // マギア対象選択中
 //----------------------------------
+
 if(magiaTargetMode){
 
     //----------------------------------
-// クールゾーン
-//----------------------------------
-
-if(
-    card.area === "cool"
-){
-
-    //----------------------------------
-    // マギア対象として有効か確認
+    // クールゾーン
     //----------------------------------
 
     if(
-        isValidMagiaTarget(
-            magiaCard,
-            card
-        )
+        card.area === "cool"
     ){
 
         //----------------------------------
-        // 対象決定
+        // マギア対象として有効か確認
         //----------------------------------
 
-        magiaTarget =
-            card;
+        if(
+            isValidMagiaTarget(
+                magiaCard,
+                card
+            )
+        ){
+
+            //----------------------------------
+            // 対象決定
+            //----------------------------------
+
+            magiaTarget =
+                card;
 
 
-        magiaTargetMode =
-            false;
+            magiaTargetMode =
+                false;
 
 
-        clearMagiaHighlight();
+            clearMagiaHighlight();
 
+
+            console.log(
+                "マギア対象決定：クールゾーン",
+                card.name
+            );
+
+
+            startMagiaCost();
+
+
+            return;
+
+        }
+
+
+        //----------------------------------
+        // 対象外なら何もしない
+        //----------------------------------
 
         console.log(
-            "マギア対象決定：クールゾーン",
+            "マギア対象外：クールゾーン",
             card.name
         );
-
-
-        startMagiaCost();
-
 
         return;
 
     }
-
-
-    //----------------------------------
-    // 対象外なら何もしない
-    //----------------------------------
-
-    console.log(
-        "マギア対象外：クールゾーン",
-        card.name
-    );
-
-    return;
-
-}
 
 
     //----------------------------------
@@ -1230,6 +1264,7 @@ if(
 
 }
 
+
 //======================================
 // ブロック中
 //======================================
@@ -1258,7 +1293,8 @@ if(blockMode){
     // 今回クリックしたカードを選択
     //----------------------------------
 
-    selectedInfoCard = card;
+    selectedInfoCard =
+        card;
 
     card.setSelected(true);
 
@@ -1286,7 +1322,7 @@ if(blockMode){
     ){
 
         const summon =
-        findSummonByView(card);
+            findSummonByView(card);
 
 
         if(!summon){
@@ -1368,12 +1404,12 @@ if(resistUsingCard){
 
 }
 
+
 //----------------------------------
 // レジスト選択中
 //----------------------------------
 
 if(resistMode){
-
 
     //----------------------------------
     // 前回選択解除
@@ -1393,75 +1429,68 @@ if(resistMode){
     }
 
 
-
     //----------------------------------
     // 今回クリックしたカードを保存
     //----------------------------------
 
-    selectedInfoCard = card;
+    selectedInfoCard =
+        card;
 
 
     card.setSelected(true);
-
 
 
     //----------------------------------
     // 使用可能レジスト
     //----------------------------------
 
-if(
-    selectableResistCards.includes(card)
-){
+    if(
+        selectableResistCards.includes(card)
+    ){
 
-    selectedHandCard = card;
+        selectedHandCard =
+            card;
 
 
-    showCardInfo(card);
+        showCardInfo(card);
+
+
+        updateButtons();
+
+
+        return;
+
+    }
+
+
+    //----------------------------------
+    // 使用不可カード
+    //----------------------------------
+
+    selectedHandCard =
+        null;
 
 
     updateButtons();
 
-
-    return;
-
-}
-//----------------------------------
-// 使用不可カード
-//----------------------------------
-
-selectedHandCard = null;
-
-updateButtons();
-
-showCardInfo(card);
-
-return;
-
-
-
-    //----------------------------------
-    // その他カード
-    //----------------------------------
-
     showCardInfo(card);
 
-
     return;
 
 }
 
 
-    //----------------------------------
-    // 場サモン
-    //----------------------------------
+//----------------------------------
+// 場サモン
+//----------------------------------
 
-    if(
+if(
     card.area === "field" ||
     card.area === "enemyField"
 ){
 
     const summon =
-    findSummonByView(card);
+        findSummonByView(card);
 
 
     if(!summon){
@@ -1477,63 +1506,63 @@ return;
 
     if(isAttacking()){
 
-
         executeAttack(
             attackingSummon,
             summon
         );
 
-
         return;
 
     }
 
 
+    //----------------------------------
+    // 通常表示
+    //----------------------------------
 
-//----------------------------------
-// 通常表示
-//----------------------------------
+    clearHandSelection();
 
-clearHandSelection();
+    clearFieldSelection();
 
-clearFieldSelection();
+    selectedSummon =
+        summon;
 
-selectedSummon = summon;
+    card.setSelected(true);
 
-card.setSelected(true);
+    showCardInfo(
+        card
+    );
 
-showCardInfo(
-    card
-);
-
-return;
+    return;
 
 }
 
 
-    //----------------------------------
-    // サモン・マギア コスト選択中
-    //----------------------------------
+//----------------------------------
+// サモン・マギア コスト選択中
+//----------------------------------
 
-    if(summonCard){
+if(summonCard){
 
-        if(card === summonCard){
-
-            return;
-
-        }
-
-        if(card.area === "hand"){
-
-            selectCostCard(card);
-
-        }
+    if(card === summonCard){
 
         return;
 
     }
 
-    //----------------------------------
+
+    if(card.area === "hand"){
+
+        selectCostCard(card);
+
+    }
+
+    return;
+
+}
+
+
+//----------------------------------
 // 攻撃中に別カードをクリック
 // → 攻撃キャンセル
 //----------------------------------
@@ -1565,55 +1594,61 @@ if(card.area !== "hand"){
 
 }
 
-    //----------------------------------
-    // 場モーダル閉じる
-    //----------------------------------
 
-    closeSummonActionModal();
+//----------------------------------
+// 場モーダル閉じる
+//----------------------------------
 
-    //----------------------------------
-    // 前の選択解除
-    //----------------------------------
+closeSummonActionModal();
 
-    if(
-        selectedHandCard &&
-        selectedHandCard !== card
-    ){
 
-        selectedHandCard.setSelected(
-            false
-        );
+//----------------------------------
+// 前の選択解除
+//----------------------------------
 
-    }
+if(
+    selectedHandCard &&
+    selectedHandCard !== card
+){
 
-    //----------------------------------
-    // 場選択解除
-    //----------------------------------
-
-    clearFieldSelection();
-
-    //----------------------------------
-    // 手札選択
-    //----------------------------------
-
-    selectedHandCard = card;
-
-card.setSelected(true);
-
-    //----------------------------------
-    // カード情報表示
-    //----------------------------------
-
-    showCardInfo(card);
-
-    //----------------------------------
-    // ボタン更新
-    //----------------------------------
-
-    updateButtons();
+    selectedHandCard.setSelected(
+        false
+    );
 
 }
 
+
+//----------------------------------
+// 場選択解除
+//----------------------------------
+
+clearFieldSelection();
+
+
+//----------------------------------
+// 手札選択
+//----------------------------------
+
+selectedHandCard =
+    card;
+
+card.setSelected(true);
+
+
+//----------------------------------
+// カード情報表示
+//----------------------------------
+
+showCardInfo(card);
+
+
+//----------------------------------
+// ボタン更新
+//----------------------------------
+
+updateButtons();
+
+}
 
 //======================================
 // カード情報表示
