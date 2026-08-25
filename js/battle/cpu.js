@@ -126,6 +126,7 @@ function runCpuTurnStep(){
 
     }
 
+
     //----------------------------------
     // プレイヤー操作待ち
     //----------------------------------
@@ -166,78 +167,43 @@ function runCpuTurnStep(){
     }
 
 
+    //==================================
+    // CPUターン終了
+    //==================================
+
+    if(
+        cpuTurnStep === 4
+    ){
+
+        console.log(
+            "CPU：ターン終了処理へ"
+        );
+
+
+        cpuFinishTurn();
+
+
+        return;
+
+    }
+
+
+    //----------------------------------
+    // 通常のCPU行動
+    //----------------------------------
+
     console.log(
-        "CPU行動ステップ",
-        cpuTurnStep
+        "CPUポイント方式：行動選択"
     );
 
 
     //----------------------------------
-    // ステップ処理
+    // ポイント方式で行動実行
     //----------------------------------
 
-    switch(cpuTurnStep){
-
-
-        //==================================
-        // ③ 最初の攻撃
-        //==================================
-
-        case 0:
-
-            cpuStartAttackPhase();
-
-            break;
-
-
-        //==================================
-        // ① サモン
-        //==================================
-
-        case 1:
-
-            cpuPlaySummon();
-
-            break;
-
-
-        //==================================
-        // ② マギア
-        //==================================
-
-        case 2:
-
-            cpuPlayMagia();
-
-            break;
-
-
-        //==================================
-        // ③ 最後の攻撃
-        //==================================
-
-        case 3:
-
-            cpuStartAttackPhase();
-
-            break;
-
-
-        //==================================
-        // 終了
-        //==================================
-
-        case 4:
-
-            cpuFinishTurn();
-
-            break;
-
-    }
+    cpuExecuteBestAction();
 
 }
-
-
 //======================================
 // CPU攻撃フェーズ開始
 //======================================
@@ -1052,419 +1018,6 @@ function selectCpuAttackTarget(){
 
 }
 
-//======================================
-// CPUサモン
-//======================================
-
-function cpuPlaySummon(){
-
-    //----------------------------------
-    // 既に召喚済み
-    //----------------------------------
-
-    if(cpuSummonUsedThisTurn){
-
-        console.log(
-            "CPUサモン使用済み"
-        );
-
-        cpuTurnStep = 2;
-
-        setTimeout(
-            runCpuTurnStep,
-            500
-        );
-
-        return;
-
-    }
-
-
-    //----------------------------------
-    // 手札から候補取得
-    //----------------------------------
-
-    const candidates =
-    enemyHandCards.filter(card=>{
-
-        if(card.type !== "サモン"){
-
-            return false;
-
-        }
-
-
-        //----------------------------------
-        // CPU側の現在コスト
-        //----------------------------------
-
-        const currentCost =
-            getCurrentCardCost(
-                card,
-                ENEMY
-            );
-
-
-        //----------------------------------
-        // 召喚後に手札を2枚残せるか
-        //----------------------------------
-
-        return (
-            enemyHandCards.length
-            - 1
-            - currentCost
-            >=
-            2
-        );
-
-    });
-
-
-    //----------------------------------
-    // 出せるサモンなし
-    //----------------------------------
-
-    if(
-        candidates.length === 0
-    ){
-
-        console.log(
-            "CPU召喚可能サモンなし"
-        );
-
-        cpuTurnStep = 2;
-
-        setTimeout(
-            runCpuTurnStep,
-            500
-        );
-
-        return;
-
-    }
-
-
-    //======================================
-    // サモン選択
-    //======================================
-
-    const hasDragonOrKraken =
-        cpuHasDragonOrKraken();
-
-
-    let card = null;
-
-
-    //======================================
-    // ① ドラゴン・クラーケン対策
-    //======================================
-
-    if(hasDragonOrKraken){
-
-        //----------------------------------
-        // ゴーレム優先
-        //----------------------------------
-
-        card =
-            candidates.find(
-                c =>
-                    c.name === "ゴーレム"
-            );
-
-
-        //----------------------------------
-        // ゴーレムがなければ
-        // バジリスク
-        //----------------------------------
-
-        if(!card){
-
-            card =
-                candidates.find(
-                    c =>
-                        c.name === "バジリスク"
-                );
-
-        }
-
-
-        if(card){
-
-            console.log(
-                "CPU：ドラゴン・クラーケン対策サモン",
-                card.name
-            );
-
-        }
-
-    }
-
-
-    //======================================
-    // ② ダメージマギアと
-    //    ウィルオウィスプの組み合わせ
-    //======================================
-
-    if(!card){
-
-        //----------------------------------
-        // CPU手札に
-        // ファイアボール
-        // パイロフレイム
-        // エクスプロジア
-        // のいずれかがあるか
-        //----------------------------------
-
-        const hasFireDamageMagia =
-            enemyHandCards.some(
-                c =>
-                    c.type === "マギア" &&
-                    (
-                        c.name === "ファイアボール" ||
-                        c.name === "パイロフレイム" ||
-                        c.name === "エクスプロジア"
-                    )
-            );
-
-
-        //----------------------------------
-        // 対象マギアを持っている場合
-        //----------------------------------
-
-        if(hasFireDamageMagia){
-
-            //----------------------------------
-            // コスト4
-            //----------------------------------
-
-            card =
-                candidates.find(
-                    c =>
-                        getCurrentCardCost(
-                            c,
-                            ENEMY
-                        ) === 4
-                );
-
-
-            if(card){
-
-                console.log(
-                    "CPU：ダメージマギアあり",
-                    "コスト4サモンを優先",
-                    card.name
-                );
-
-            }
-
-
-            //----------------------------------
-            // コスト4がなければコスト3
-            //----------------------------------
-
-            if(!card){
-
-                card =
-                    candidates.find(
-                        c =>
-                            getCurrentCardCost(
-                                c,
-                                ENEMY
-                            ) === 3
-                    );
-
-
-                if(card){
-
-                    console.log(
-                        "CPU：ダメージマギアあり",
-                        "コスト3サモンを優先",
-                        card.name
-                    );
-
-                }
-
-            }
-
-
-            //----------------------------------
-            // コスト4・3がなければ
-            // ウィルオウィスプ
-            //----------------------------------
-
-            if(!card){
-
-                card =
-                    candidates.find(
-                        c =>
-                            c.name ===
-                            "ウィルオウィスプ"
-                    );
-
-
-                if(card){
-
-                    console.log(
-                        "CPU：ダメージマギアあり",
-                        "ウィルオウィスプを優先"
-                    );
-
-                }
-
-            }
-
-
-            //----------------------------------
-            // ウィルオウィスプもなければ
-            // コスト2以下
-            //----------------------------------
-
-            if(!card){
-
-                const lowCostCandidates =
-                    candidates.filter(
-                        c =>
-                            getCurrentCardCost(
-                                c,
-                                ENEMY
-                            ) <= 2
-                    );
-
-
-                if(
-                    lowCostCandidates.length > 0
-                ){
-
-                    //----------------------------------
-                    // コスト2以下では
-                    // コストが高いものを優先
-                    //----------------------------------
-
-                    lowCostCandidates.sort(
-                        (a,b)=>{
-
-                            const costA =
-                                getCurrentCardCost(
-                                    a,
-                                    ENEMY
-                                );
-
-                            const costB =
-                                getCurrentCardCost(
-                                    b,
-                                    ENEMY
-                                );
-
-                            return costB - costA;
-
-                        }
-                    );
-
-
-                    card =
-                        lowCostCandidates[0];
-
-
-                    console.log(
-                        "CPU：ダメージマギアあり",
-                        "コスト2以下から選択",
-                        card.name
-                    );
-
-                }
-
-            }
-
-        }
-
-    }
-
-
-    //======================================
-    // ③ 特殊条件に該当しなければ
-    //    従来通りコスト最大
-    //======================================
-
-    if(!card){
-
-        candidates.sort(
-            (a,b)=>{
-
-                const costA =
-                    getCurrentCardCost(
-                        a,
-                        ENEMY
-                    );
-
-                const costB =
-                    getCurrentCardCost(
-                        b,
-                        ENEMY
-                    );
-
-                return costB - costA;
-
-            }
-        );
-
-
-        card =
-            candidates[0];
-
-    }
-
-
-    //----------------------------------
-    // 現在コスト取得
-    //----------------------------------
-
-    const currentCost =
-        getCurrentCardCost(
-            card,
-            ENEMY
-        );
-
-
-    console.log(
-        "CPU召喚選択",
-        card.name,
-        "元cost=",
-        card.cost,
-        "現在cost=",
-        currentCost
-    );
-
-
-    //----------------------------------
-    // 召喚
-    //----------------------------------
-
-    const result =
-        cpuSummon(
-            card
-        );
-
-
-    if(result){
-
-        cpuSummonUsedThisTurn = true;
-
-    }
-
-
-    //----------------------------------
-    // 次へ
-    //----------------------------------
-
-    cpuTurnStep = 2;
-
-
-    setTimeout(
-        runCpuTurnStep,
-        2000
-    );
-
-}
 
 //======================================
 // CPUサモン召喚
@@ -1621,430 +1174,6 @@ function moveEnemyToCost(card){
 // CPUマギア使用
 //======================================
 
-function cpuPlayMagia(){
-
-    //----------------------------------
-    // フォローウィンド優先判定
-    //----------------------------------
-
-    const followWindInfo =
-        getCpuFollowWindTarget();
-
-
-    if(followWindInfo){
-
-        //----------------------------------
-        // 攻撃セットアップ用マギア
-        //----------------------------------
-
-        if(
-            !cpuShouldUseAttackSetupMagia(
-                followWindInfo.card
-            )
-        ){
-
-            console.log(
-                "CPU：フォローウィンド使用見送り",
-                "使用後に意味のある攻撃なし"
-            );
-
-        }
-        else{
-
-            console.log(
-                "CPU：フォローウィンドを使用",
-                "対象=",
-                followWindInfo.target.card.name
-            );
-
-
-            const result =
-                cpuMagia(
-                    followWindInfo.card,
-                    followWindInfo.target
-                );
-
-
-            console.log(
-                "CPU：フォローウィンド使用結果",
-                result
-            );
-
-
-            //----------------------------------
-            // 強制コスト型なら
-            // プレイヤー選択待ち
-            //----------------------------------
-
-            if(
-                followWindInfo.card.effect &&
-                followWindInfo.card.effect.type ===
-                "forceCost"
-            ){
-
-                console.log(
-                    "CPU：フォローウィンドの選択待ち"
-                );
-
-                return;
-
-            }
-
-
-            //----------------------------------
-            // 通常マギア
-            //----------------------------------
-
-            if(result){
-
-                cpuTurnStep = 3;
-
-
-                setTimeout(
-                    runCpuTurnStep,
-                    2000
-                );
-
-
-                return;
-
-            }
-
-        }
-
-    }
-
-
-    //----------------------------------
-    // 使用可能マギア
-    //----------------------------------
-
-    const candidates =
-        enemyHandCards.filter(
-            card => {
-
-                //----------------------------------
-                // マギア以外
-                //----------------------------------
-
-                if(
-                    card.type !== "マギア"
-                ){
-
-                    return false;
-
-                }
-
-
-                //----------------------------------
-                // 攻撃セットアップ用マギア
-                //----------------------------------
-
-                if(
-                    !cpuShouldUseAttackSetupMagia(
-                        card
-                    )
-                ){
-
-                    console.log(
-                        "CPU：攻撃セットアップマギア候補外",
-                        card.name
-                    );
-
-
-                    return false;
-
-                }
-
-
-                //----------------------------------
-                // アクアストリーム
-                // 専用使用条件
-                //----------------------------------
-
-                if(
-                    card.name ===
-                    "アクアストリーム"
-                ){
-
-                    const aquaInfo =
-                        cpuShouldUseAquaStream();
-
-
-                    if(!aquaInfo){
-
-                        console.log(
-                            "CPU：アクアストリーム候補外",
-                            "使用条件不成立"
-                        );
-
-
-                        return false;
-
-                    }
-
-                }
-
-
-                //----------------------------------
-                // CPU側の現在コスト
-                //----------------------------------
-
-                const currentCost =
-                    getCurrentCardCost(
-                        card,
-                        ENEMY
-                    );
-
-
-//----------------------------------
-// 手札を2枚残せるか
-//----------------------------------
-//
-// 通常は使用後に2枚以上残す
-//
-// ただしエクスプロジアは、
-// プレイヤーの手札が2枚以下なら
-// 使用後にCPUの手札が2枚以下になっても使用可能
-//----------------------------------
-
-const playerHandCount =
-    board.handCards.length;
-
-
-const isExplozia =
-    card.name === "エクスプロジア";
-
-
-const canIgnoreHandLimit =
-    isExplozia &&
-    playerHandCount <= 2;
-
-
-if(
-    !canIgnoreHandLimit &&
-    enemyHandCards.length
-    - 1
-    - currentCost
-    < 2
-){
-
-    console.log(
-        "CPU：手札温存のためマギア使用見送り",
-        card.name,
-        "CPU手札=",
-        enemyHandCards.length,
-        "使用後予想=",
-        enemyHandCards.length - 1 - currentCost,
-        "プレイヤー手札=",
-        playerHandCount
-    );
-
-    return false;
-
-}
-
-
-                return true;
-
-            }
-        );
-
-
-    //----------------------------------
-    // 使用可能なし
-    //----------------------------------
-
-    if(
-        candidates.length === 0
-    ){
-
-        console.log(
-            "CPUマギア使用なし"
-        );
-
-
-        cpuTurnStep = 3;
-
-
-        setTimeout(
-            runCpuTurnStep,
-            500
-        );
-
-
-        return;
-
-    }
-
-
-    //----------------------------------
-    // 現在の候補から選択
-    //----------------------------------
-
-    const card =
-        candidates[0];
-
-
-    //----------------------------------
-    // 現在コスト
-    //----------------------------------
-
-    const currentCost =
-        getCurrentCardCost(
-            card,
-            ENEMY
-        );
-
-
-    console.log(
-        "CPUマギア選択",
-        card.name,
-        "元cost=",
-        card.cost,
-        "現在cost=",
-        currentCost
-    );
-
-
-    //----------------------------------
-    // 対象
-    //----------------------------------
-
-    const target =
-        selectCpuMagiaTarget(
-            card
-        );
-
-
-    //----------------------------------
-    // 対象なし
-    //----------------------------------
-
-    if(!target){
-
-        console.log(
-            "CPUマギア対象なし",
-            card.name
-        );
-
-
-        cpuTurnStep = 3;
-
-
-        setTimeout(
-            runCpuTurnStep,
-            500
-        );
-
-
-        return;
-
-    }
-
-
-    //----------------------------------
-    // 攻撃セットアップ用マギア
-    //----------------------------------
-    // 対象決定後にも再確認
-    //----------------------------------
-
-    if(
-        !cpuShouldUseAttackSetupMagia(
-            card
-        )
-    ){
-
-        console.log(
-            "CPU：マギア使用見送り",
-            card.name,
-            "攻撃評価不成立"
-        );
-
-
-        cpuTurnStep = 3;
-
-
-        setTimeout(
-            runCpuTurnStep,
-            500
-        );
-
-
-        return;
-
-    }
-
-
-    //----------------------------------
-    // 使用
-    //----------------------------------
-
-    const result =
-        cpuMagia(
-            card,
-            target
-        );
-
-
-    console.log(
-        "CPUマギア使用結果",
-        result
-    );
-
-
-    //----------------------------------
-    // 強制コスト型
-    //----------------------------------
-
-    if(
-        card.effect &&
-        card.effect.type ===
-        "forceCost"
-    ){
-
-        //----------------------------------
-        // プレイヤー選択待ち
-        //----------------------------------
-
-        if(
-            target === PLAYER &&
-            board.handCards.length > 0
-        ){
-
-            console.log(
-                "CPU：プレイヤーの手札選択待ち"
-            );
-
-            return;
-
-        }
-
-
-        //----------------------------------
-        // 手札がない場合
-        //----------------------------------
-
-        console.log(
-            "CPU：プレイヤー手札なし"
-        );
-
-    }
-
-
-    //----------------------------------
-    // 通常マギア
-    //----------------------------------
-
-    cpuTurnStep = 3;
-
-
-    setTimeout(
-        runCpuTurnStep,
-        2000
-    );
-
-}
 
 //======================================
 // CPUマギア使用
@@ -3063,11 +2192,10 @@ if(isDamageMagia){
 // CPUマギアコスト
 //======================================
 
-function payEnemyCost(cost, excludeCard = null){
-
-    //----------------------------------
-    // CPUコストカード選択
-    //----------------------------------
+function payEnemyCost(
+    cost,
+    excludeCard = null
+){
 
     const costCards =
         selectCpuCostCards(
@@ -3076,9 +2204,21 @@ function payEnemyCost(cost, excludeCard = null){
         );
 
 
-    //----------------------------------
-    // コスト支払い
-    //----------------------------------
+    if(
+        costCards.length < cost
+    ){
+
+        console.log(
+            "CPUコスト支払い失敗",
+            "必要=",
+            cost,
+            "取得=",
+            costCards.length
+        );
+
+        return false;
+    }
+
 
     costCards.forEach(
         card => {
@@ -3091,12 +2231,9 @@ function payEnemyCost(cost, excludeCard = null){
     );
 
 
-    //----------------------------------
-    // 表示更新
-    //----------------------------------
-
     updateEnemyZoneDisplay();
 
+    return true;
 }
 
 //======================================
@@ -4872,10 +4009,6 @@ function cpuShouldUseAquaStream(){
 
 function getCpuFollowWindTarget(){
 
-    //----------------------------------
-    // フォローウィンドが手札にあるか
-    //----------------------------------
-
     const followWind =
         enemyHandCards.find(
             card =>
@@ -4883,67 +4016,77 @@ function getCpuFollowWindTarget(){
                 card.type === "マギア"
         );
 
-
     if(!followWind){
-
         return null;
-
     }
 
-
-    //----------------------------------
-    // 召喚したばかりのサモンを探す
-    //----------------------------------
 
     const target =
         enemyField.find(
             summon => {
 
                 if(!summon){
-
                     return false;
-
                 }
 
 
                 //----------------------------------
-                // 召喚ターンなので攻撃不可
+                // マギア対象不可
                 //----------------------------------
 
-                if(summon.attackReady){
-
+                if(
+                    isMagiaTargetBlocked(
+                        followWind,
+                        summon
+                    )
+                ){
                     return false;
-
                 }
 
 
                 //----------------------------------
-                // タテ向き
+                // すでに攻撃可能
                 //----------------------------------
 
-                if(summon.isRest){
-
+                if(
+                    summon.attackReady
+                ){
                     return false;
+                }
 
+
+                //----------------------------------
+                // 横向き
+                //----------------------------------
+
+                if(
+                    summon.isRest
+                ){
+                    return false;
+                }
+
+
+                //----------------------------------
+                // 召喚ターン攻撃可能能力持ち
+                //----------------------------------
+
+                if(
+                    summon.card?.ability?.type ===
+                    "summonTurnAttack"
+                ){
+                    return false;
                 }
 
 
                 return true;
-
             }
         );
 
 
     if(!target){
-
         return null;
-
     }
 
-
-    //----------------------------------
-    // 現在コスト確認
-    //----------------------------------
 
     const currentCost =
         getCurrentCardCost(
@@ -4952,32 +4095,23 @@ function getCpuFollowWindTarget(){
         );
 
 
-    //----------------------------------
-    // コスト支払い可能か
-    //----------------------------------
-
     if(
         enemyHandCards.length
         - 1
         - currentCost
         < 2
     ){
-
         return null;
-
     }
 
 
     return {
-
         card:
             followWind,
 
         target:
             target
-
     };
-
 }
 
 //======================================
@@ -5688,6 +4822,21 @@ function selectCpuDamageMagiaTarget(card){
 
     }
 
+    //======================================
+// ロックスパイク
+//======================================
+
+else if(
+    card.name ===
+    "ロックスパイク"
+){
+
+    priority = [
+        "highestKillable"
+    ];
+
+}
+
 
     //----------------------------------
     // 対象優先順位なし
@@ -5782,6 +4931,45 @@ function selectCpuDamageMagiaTarget(card){
     for(
         const rule of priority
     ){
+
+
+//----------------------------------
+// 倒せる中で一番パワーが高いサモン
+//----------------------------------
+
+if(
+    rule === "highestKillable"
+){
+
+    if(
+        killableSummons.length > 0
+    ){
+
+        const targets =
+            [...killableSummons].sort(
+                (a,b)=>
+                    getPower(b)
+                    -
+                    getPower(a)
+            );
+
+
+        console.log(
+            "CPU：ダメージマギア対象",
+            card.name,
+            "→ 最大パワー撃破",
+            targets[0].card.name,
+            "power=",
+            getPower(targets[0])
+        );
+
+
+        return targets[0];
+
+    }
+
+}
+
 
         //----------------------------------
         // ドラゴン
@@ -6010,15 +5198,73 @@ function selectCpuDamageMagiaTarget(card){
 
 }
 
-//======================================
-// CPU サモン召喚優先順位
-//======================================
 
-function selectCpuSummonCandidate(candidates){
+//--------------------------------------
+// CPU行動候補
+//--------------------------------------
+
+function createCpuAction(
+    type,
+    card,
+    target = null
+){
+
+    return {
+
+        type: type,
+
+        card: card,
+
+        target: target,
+
+        points: 0
+
+    };
+
+}
+
+
+//--------------------------------------
+// CPU行動ポイント加算
+//--------------------------------------
+
+function addCpuActionPoints(
+    action,
+    points,
+    reason = ""
+){
+
+    action.points += points;
+
+
+    if(reason){
+
+        console.log(
+            "CPUポイント加算",
+            action.card?.name,
+            points,
+            reason,
+            "合計=",
+            action.points
+        );
+
+    }
+
+}
+
+
+//--------------------------------------
+// CPU行動候補の中から
+// 最もポイントが高いものを選択
+//--------------------------------------
+
+function selectBestCpuAction(
+    actions
+){
 
     if(
-        !candidates ||
-        candidates.length === 0
+        !actions ||
+        actions.length === 0
     ){
 
         return null;
@@ -6027,173 +5273,2220 @@ function selectCpuSummonCandidate(candidates){
 
 
     //----------------------------------
-    // 特定ダメージマギアを手札に持っているか
+    // ポイント順
     //----------------------------------
 
-    const hasFireMagia =
+    actions.sort(
+        (a,b) =>
+            b.points - a.points
+    );
+
+
+    //----------------------------------
+    // 候補表示
+    //----------------------------------
+
+    console.log(
+        "================================"
+    );
+
+    console.log(
+        "CPU行動ポイント評価"
+    );
+
+
+    actions.forEach(
+        action => {
+
+            console.log(
+                "CPU候補",
+                action.type,
+                action.card?.name,
+                "target=",
+                action.target?.card?.name ||
+                action.target,
+                "points=",
+                action.points
+            );
+
+        }
+    );
+
+
+    console.log(
+        "CPU選択",
+        actions[0].type,
+        actions[0].card?.name,
+        "points=",
+        actions[0].points
+    );
+
+
+    console.log(
+        "================================"
+    );
+
+
+    return actions[0];
+
+}
+
+//======================================
+// CPU：サモンのポイント評価
+//======================================
+
+function evaluateCpuSummonAction(
+    card
+){
+
+    if(!card){
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // このターンすでにサモン済み
+    //----------------------------------
+
+    if(
+        cpuSummonUsedThisTurn
+    ){
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // サモン以外
+    //----------------------------------
+
+    if(
+        card.type !== "サモン"
+    ){
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // 現在コスト
+    //----------------------------------
+
+    const currentCost =
+        getCurrentCardCost(
+            card,
+            ENEMY
+        );
+
+
+    //----------------------------------
+    // 手札温存条件
+    //----------------------------------
+
+    if(
+        enemyHandCards.length
+        - 1
+        - currentCost
+        <
+        2
+    ){
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // 行動作成
+    //----------------------------------
+
+    const action =
+        createCpuAction(
+            "SUMMON",
+            card
+        );
+
+
+    //==================================
+    // 基本ポイント
+    //==================================
+
+    addCpuActionPoints(
+        action,
+        100,
+        "サモン基本点"
+    );
+
+
+    //==================================
+    // コスト評価
+    //==================================
+
+    addCpuActionPoints(
+        action,
+        currentCost * 5,
+        "高コストサモン"
+    );
+
+
+    //==================================
+    // ドラゴン・クラーケン対策
+    //==================================
+
+    if(
+        cpuHasDragonOrKraken()
+    ){
+
+        if(
+            card.name === "ゴーレム"
+        ){
+
+            addCpuActionPoints(
+                action,
+                50,
+                "ドラゴン・クラーケン対策"
+            );
+
+        }
+
+
+        if(
+            card.name === "バジリスク"
+        ){
+
+            addCpuActionPoints(
+                action,
+                35,
+                "ドラゴン・クラーケン対策"
+            );
+
+        }
+
+    }
+
+
+    //==================================
+    // ダメージマギアとの組み合わせ
+    //==================================
+
+    const hasFireDamageMagia =
         enemyHandCards.some(
-            card =>
-                card.name === "ファイアボール" ||
-                card.name === "パイロフレイム" ||
-                card.name === "エクスプロジア"
+            c =>
+                c.type === "マギア" &&
+                (
+                    c.name === "ファイアボール" ||
+                    c.name === "パイロフレイム" ||
+                    c.name === "エクスプロジア"
+                )
         );
 
 
+    if(
+        hasFireDamageMagia
+    ){
+
+        //----------------------------------
+        // ウィルオウィスプ
+        //----------------------------------
+
+        if(
+            card.name ===
+            "ウィルオウィスプ"
+        ){
+
+            addCpuActionPoints(
+                action,
+                40,
+                "ダメージマギアとのコンボ"
+            );
+
+        }
+
+
+        //----------------------------------
+        // コスト3～4
+        //----------------------------------
+
+        if(
+            currentCost >= 3 &&
+            currentCost <= 4
+        ){
+
+            addCpuActionPoints(
+                action,
+                20,
+                "ダメージマギアと組み合わせやすい"
+            );
+
+        }
+
+    }
+
+
+    return action;
+
+}
+
+//======================================
+// CPU：サモン行動候補を作成
+//======================================
+
+function createCpuSummonActions(){
+
+    const actions = [];
+
+
     //----------------------------------
-    // 特定マギアがない
-    // → 従来通りコスト最大
+    // このターンすでにサモン済み
     //----------------------------------
 
-    if(!hasFireMagia){
+    if(
+        cpuSummonUsedThisTurn
+    ){
 
-        candidates.sort(
-            (a,b)=>{
-
-                const costA =
-                    getCurrentCardCost(
-                        a,
-                        ENEMY
-                    );
-
-                const costB =
-                    getCurrentCardCost(
-                        b,
-                        ENEMY
-                    );
-
-                return costB - costA;
-
-            }
-        );
-
-
-        return candidates[0];
+        return actions;
 
     }
 
 
     //----------------------------------
-    // 特定マギアがある場合
+    // 手札のサモンを全部評価
     //----------------------------------
+
+    enemyHandCards.forEach(
+        card => {
+
+            const action =
+                evaluateCpuSummonAction(
+                    card
+                );
+
+
+            if(action){
+
+                actions.push(
+                    action
+                );
+
+            }
+
+        }
+    );
+
+
+    return actions;
+
+}
+
+
+//======================================
+// CPU：マギア行動候補を作成・ポイント評価
+//======================================
+
+function createCpuMagiaAction(card){
+
+    //----------------------------------
+    // マギア以外
+    //----------------------------------
+
+    if(!card){
+
+        return null;
+
+    }
+
+
+    if(
+        card.type !== "マギア"
+    ){
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // 現在コスト
+    //----------------------------------
+
+    const currentCost =
+        getCurrentCardCost(
+            card,
+            ENEMY
+        );
+
+
+    //----------------------------------
+    // コスト支払い可能か
+    //----------------------------------
+
+    if(
+        !canPayCost(
+            card,
+            ENEMY
+        )
+    ){
+
+        console.log(
+            "CPUポイント評価：マギア候補外",
+            card.name,
+            "コスト不足"
+        );
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // プレイヤー手札枚数
+    //----------------------------------
+
+    const playerHandCount =
+        board.handCards.length;
+
+
+    //----------------------------------
+    // エクスプロジア特殊処理
+    //----------------------------------
+
+    const isExplozia =
+        card.name ===
+        "エクスプロジア";
+
+
+    const canIgnoreHandLimit =
+        isExplozia &&
+        playerHandCount <= 2;
+
+
+    //----------------------------------
+    // 通常の手札温存
+    //----------------------------------
+
+    if(
+        !canIgnoreHandLimit &&
+        enemyHandCards.length
+        - 1
+        - currentCost
+        < 2
+    ){
+
+        console.log(
+            "CPUポイント評価：マギア候補外",
+            card.name,
+            "手札温存"
+        );
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // 攻撃セットアップ用マギア
+    //----------------------------------
+
+    if(
+        !cpuShouldUseAttackSetupMagia(
+            card
+        )
+    ){
+
+        console.log(
+            "CPUポイント評価：マギア候補外",
+            card.name,
+            "攻撃セットアップ不成立"
+        );
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // アクアストリーム専用条件
+    //----------------------------------
+
+    if(
+        card.name ===
+        "アクアストリーム"
+    ){
+
+        const aquaInfo =
+            cpuShouldUseAquaStream();
+
+
+        if(!aquaInfo){
+
+            console.log(
+                "CPUポイント評価：アクアストリーム候補外"
+            );
+
+            return null;
+
+        }
+
+    }
+
+    //----------------------------------
+// ウィンドプレッシャー専用条件
+//----------------------------------
+
+if(
+    card.name ===
+    "ウィンドプレッシャー"
+){
+
+    //----------------------------------
+    // PLAYERの手札が0枚なら使用しない
+    //----------------------------------
+
+    const playerHandCount =
+        board.handCards.length;
+
+
+    if(
+        playerHandCount <= 0
+    ){
+
+        console.log(
+            "CPUポイント評価：ウィンドプレッシャー候補外",
+            "PLAYER手札0枚"
+        );
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // 使用後に攻撃する意味がなければ使用しない
+    //----------------------------------
+
+    if(
+        !cpuHasMeaningfulAttack()
+    ){
+
+        console.log(
+            "CPUポイント評価：ウィンドプレッシャー候補外",
+            "使用後に意味のある攻撃なし"
+        );
+
+        return null;
+
+    }
+
+}
+
+
+    //----------------------------------
+    // 対象取得
+    //----------------------------------
+
+    const target =
+        selectCpuMagiaTarget(
+            card
+        );
+
+
+    //----------------------------------
+    // 対象なし
+    //----------------------------------
+
+    if(!target){
+
+        console.log(
+            "CPUポイント評価：マギア対象なし",
+            card.name
+        );
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // 行動作成
+    //----------------------------------
+
+    const action =
+        createCpuAction(
+            "MAGIA",
+            card,
+            target
+        );
+
+
+    //==================================
+    // 基本ポイント
+    //==================================
+
+    addCpuActionPoints(
+        action,
+        10,
+        "マギア基本点"
+    );
+
+
+    //==================================
+    // コスト評価
+    //==================================
     //
-    // ① コスト4
-    // ② コスト3
-    // ③ ウィルオウィスプ
-    // ④ コスト2以下
-    //----------------------------------
+    // 高コストを使う価値を少し高くする
+    //
+
+    addCpuActionPoints(
+        action,
+        currentCost * 3,
+        "マギアコスト評価"
+    );
 
 
-    //----------------------------------
-    // コスト4
-    //----------------------------------
+    //==================================
+    // カード別基本評価
+    //==================================
 
-    const cost4 =
-        candidates.filter(
-            card =>
-                getCurrentCardCost(
-                    card,
-                    ENEMY
-                ) === 4
-        );
-
-
-    if(cost4.length > 0){
-
-        return cost4[0];
-
-    }
-
-
-    //----------------------------------
-    // コスト3
-    //----------------------------------
-
-    const cost3 =
-        candidates.filter(
-            card =>
-                getCurrentCardCost(
-                    card,
-                    ENEMY
-                ) === 3
-        );
-
-
-    if(cost3.length > 0){
-
-        return cost3[0];
-
-    }
-
-
-    //----------------------------------
-    // ウィルオウィスプ
-    //----------------------------------
-
-    const willOWisp =
-        candidates.find(
-            card =>
-                card.name ===
-                "ウィルオウィスプ"
-        );
-
-
-    if(willOWisp){
-
-        return willOWisp;
-
-    }
-
-
-    //----------------------------------
-    // コスト2以下
-    //----------------------------------
-
-    const lowCost =
-        candidates.filter(
-            card =>
-                getCurrentCardCost(
-                    card,
-                    ENEMY
-                ) <= 2
-        );
-
-
-    if(lowCost.length > 0){
+    switch(card.name){
 
         //----------------------------------
-        // 低コスト内では高いものを優先
+        // ファイアボール
         //----------------------------------
 
-        lowCost.sort(
-            (a,b)=>{
+        case "ファイアボール":
 
-                const costA =
-                    getCurrentCardCost(
-                        a,
-                        ENEMY
-                    );
+            addCpuActionPoints(
+                action,
+                20,
+                "ファイアボール"
+            );
 
-                const costB =
-                    getCurrentCardCost(
-                        b,
-                        ENEMY
-                    );
+            break;
 
-                return costB - costA;
+
+        //----------------------------------
+        // パイロフレイム
+        //----------------------------------
+
+        case "パイロフレイム":
+
+            addCpuActionPoints(
+                action,
+                30,
+                "パイロフレイム"
+            );
+
+            break;
+
+
+        //----------------------------------
+        // エクスプロジア
+        //----------------------------------
+
+        case "エクスプロジア":
+
+            addCpuActionPoints(
+                action,
+                40,
+                "エクスプロジア"
+            );
+
+            break;
+
+
+        //----------------------------------
+        // アクアストリーム
+        //----------------------------------
+
+        case "アクアストリーム":
+
+            addCpuActionPoints(
+                action,
+                25,
+                "アクアストリーム"
+            );
+
+            break;
+
+
+        //----------------------------------
+        // フォローウィンド
+        //----------------------------------
+
+        case "フォローウィンド":
+
+            addCpuActionPoints(
+                action,
+                20,
+                "フォローウィンド"
+            );
+
+            break;
+
+
+        //----------------------------------
+        // ウィンドプレッシャー
+        //----------------------------------
+
+        case "ウィンドプレッシャー":
+
+            addCpuActionPoints(
+                action,
+                25,
+                "ウィンドプレッシャー"
+            );
+
+            break;
+
+    }
+
+
+    //==================================
+    // ダメージマギア評価
+    //==================================
+
+    if(
+        card.effect &&
+        card.effect.type === "damage"
+    ){
+
+        const damage =
+            Number(
+                card.effect.value
+            ) || 0;
+
+
+        //----------------------------------
+        // PLAYERへの直接ダメージ
+        //----------------------------------
+
+        if(
+            target === PLAYER ||
+            target === "player"
+        ){
+
+            addCpuActionPoints(
+                action,
+                damage * 10,
+                "PLAYERへのダメージ"
+            );
+        }
+//----------------------------------
+// 必殺ダメージ
+// プレイヤーの手札枚数によって
+// 優先度を大きく変える
+//----------------------------------
+
+const playerLife =
+    game.playerLife;
+
+
+if(
+    damage >= playerLife
+){
+
+    //----------------------------------
+    // プレイヤー手札枚数
+    //----------------------------------
+
+    const playerHandCount =
+        board.handCards.length;
+
+
+    let finishingBonus = 0;
+
+
+    //----------------------------------
+    // 手札1枚以下
+    // → 最優先
+    //----------------------------------
+
+    if(
+        playerHandCount <= 1
+    ){
+
+        finishingBonus = 1000;
+
+    }
+
+
+    //----------------------------------
+    // 手札2枚
+    //----------------------------------
+
+    else if(
+        playerHandCount === 2
+    ){
+
+        finishingBonus = 80;
+
+    }
+
+
+    //----------------------------------
+    // 手札3枚
+    //----------------------------------
+
+    else if(
+        playerHandCount === 3
+    ){
+
+        finishingBonus = 50;
+
+    }
+
+
+    //----------------------------------
+    // 手札4枚
+    //----------------------------------
+
+    else if(
+        playerHandCount === 4
+    ){
+
+        finishingBonus = 30;
+
+    }
+
+
+    //----------------------------------
+    // 手札5枚
+    //----------------------------------
+
+    else if(
+        playerHandCount === 5
+    ){
+
+        finishingBonus = 20;
+
+    }
+
+
+    //----------------------------------
+    // 手札6枚以上
+    // → 必殺だからという理由では
+    //   特別扱いしない
+    //----------------------------------
+
+    else{
+
+        finishingBonus = 0;
+
+    }
+
+
+    //----------------------------------
+    // 必殺ダメージ加算
+    //----------------------------------
+
+    addCpuActionPoints(
+        action,
+        finishingBonus,
+        "必殺ダメージ"
+    );
+
+
+    console.log(
+        "CPU必殺ダメージ評価",
+        card.name,
+        "PLAYERライフ=",
+        playerLife,
+        "ダメージ=",
+        damage,
+        "PLAYER手札=",
+        playerHandCount,
+        "追加点=",
+        finishingBonus
+    );
+
+}
+
+
+        //----------------------------------
+        // サモンへのダメージ
+        //----------------------------------
+
+        else if(
+            target &&
+            target.card
+        ){
+
+            const targetPower =
+                getPower(
+                    target
+                );
+
+
+            //----------------------------------
+            // 破壊可能
+            //----------------------------------
+
+            if(
+                damage >= targetPower
+            ){
+
+                addCpuActionPoints(
+                    action,
+                    50,
+                    "サモン破壊可能"
+                );
+
+            }
+
+
+            //----------------------------------
+            // 高パワーサモンを倒す価値
+            //----------------------------------
+
+            addCpuActionPoints(
+                action,
+                targetPower * 5,
+                "高パワーサモンを対象"
+            );
+
+        }
+
+    }
+
+
+    //==================================
+    // PLAYER対象
+    //==================================
+
+    if(
+        target === PLAYER ||
+        target === "player"
+    ){
+
+        addCpuActionPoints(
+            action,
+            10,
+            "PLAYERへの効果"
+        );
+
+    }
+
+
+    //==================================
+    // アクアストリーム
+    //==================================
+
+    if(
+        card.name ===
+        "アクアストリーム"
+    ){
+
+        //----------------------------------
+        // 攻撃可能状態を作る
+        //----------------------------------
+
+        if(
+            cpuHasMeaningfulAttack()
+        ){
+
+            addCpuActionPoints(
+                action,
+                40,
+                "攻撃可能状態を作る"
+            );
+
+        }
+
+    }
+
+//==================================
+// バーニングエナジー
+//==================================
+
+if(
+    card.name ===
+    "バーニングエナジー"
+){
+
+    //----------------------------------
+    // 攻撃可能なCPUサモンを取得
+    //----------------------------------
+
+    const attackableSummons =
+        enemyField.filter(
+            summon => {
+
+                if(!summon){
+
+                    return false;
+
+                }
+
+
+                //----------------------------------
+                // ヨコ向きなら攻撃不可
+                //----------------------------------
+
+                if(
+                    summon.isRest
+                ){
+
+                    return false;
+
+                }
+
+
+                //----------------------------------
+                // 通常の攻撃可能判定
+                //----------------------------------
+
+                if(
+                    summon.attackReady
+                ){
+
+                    return true;
+
+                }
+
+
+                //----------------------------------
+                // 召喚したターンでも攻撃できる能力
+                //----------------------------------
+
+                if(
+                    summon.card?.ability?.type ===
+                    "summonTurnAttack"
+                ){
+
+                    return true;
+
+                }
+
+
+                return false;
 
             }
         );
 
 
-        return lowCost[0];
+    //----------------------------------
+    // 攻撃可能なサモンがいない
+    //----------------------------------
+
+    if(
+        attackableSummons.length === 0
+    ){
+
+        addCpuActionPoints(
+            action,
+            -100,
+            "バーニングエナジー：攻撃可能サモンなし"
+        );
+
+
+        console.log(
+            "CPU：バーニングエナジー",
+            "攻撃可能なサモンなし → -100"
+        );
+
+    }
+    else{
+
+        //----------------------------------
+        // 相手のサモンを確認
+        //----------------------------------
+
+        const enemyTargets =
+            playerField.filter(
+                summon => {
+
+                    if(!summon){
+
+                        return false;
+
+                    }
+
+
+                    return true;
+
+                }
+            );
+
+
+        //----------------------------------
+        // 新しく倒せるタテ向きサモン
+        //----------------------------------
+
+        let createsNewVerticalAttack =
+            false;
+
+
+        //----------------------------------
+        // 新しく倒せるヨコ向きサモン
+        //----------------------------------
+
+        let createsNewHorizontalAttack =
+            false;
+
+
+        //----------------------------------
+        // 攻撃可能サモンごとに確認
+        //----------------------------------
+
+        for(
+            const attacker of attackableSummons
+        ){
+
+            const currentPower =
+                getPower(
+                    attacker
+                );
+
+
+            const boostedPower =
+                currentPower + 2;
+
+
+            //----------------------------------
+            // 相手サモンを確認
+            //----------------------------------
+
+            for(
+                const target of enemyTargets
+            ){
+
+                const targetPower =
+                    getPower(
+                        target
+                    );
+
+
+                //----------------------------------
+                // 使用前に倒せるか
+                //----------------------------------
+
+                const canKillBefore =
+                    currentPower >=
+                    targetPower;
+
+
+                //----------------------------------
+                // 使用後に倒せるか
+                //----------------------------------
+
+                const canKillAfter =
+                    boostedPower >=
+                    targetPower;
+
+
+                //----------------------------------
+                // 使用前は倒せない
+                // 使用後なら倒せる
+                //----------------------------------
+
+                if(
+                    !canKillBefore &&
+                    canKillAfter
+                ){
+
+                    //----------------------------------
+                    // 相手がヨコ向き
+                    //----------------------------------
+
+                    if(
+                        target.isRest
+                    ){
+
+                        createsNewHorizontalAttack =
+                            true;
+
+
+                        console.log(
+                            "CPU：バーニングエナジーで",
+                            "新規ヨコ向きサモン撃破可能",
+                            "攻撃者=",
+                            attacker.card?.name,
+                            "使用前=",
+                            currentPower,
+                            "使用後=",
+                            boostedPower,
+                            "対象=",
+                            target.card?.name,
+                            "対象パワー=",
+                            targetPower
+                        );
+
+                    }
+
+                    //----------------------------------
+                    // 相手がタテ向き
+                    //----------------------------------
+
+                    else{
+
+                        createsNewVerticalAttack =
+                            true;
+
+
+                        console.log(
+                            "CPU：バーニングエナジーで",
+                            "新規タテ向きサモン撃破可能",
+                            "攻撃者=",
+                            attacker.card?.name,
+                            "使用前=",
+                            currentPower,
+                            "使用後=",
+                            boostedPower,
+                            "対象=",
+                            target.card?.name,
+                            "対象パワー=",
+                            targetPower
+                        );
+
+                    }
+
+                }
+
+            }
+
+        }
+
+
+        //----------------------------------
+        // タテ向きサモンを新しく倒せる
+        //----------------------------------
+
+        if(
+            createsNewVerticalAttack
+        ){
+
+            addCpuActionPoints(
+                action,
+                50,
+                "バーニングエナジーで新規タテ向き撃破"
+            );
+
+        }
+
+
+        //----------------------------------
+        // ヨコ向きサモンを新しく倒せる
+        //----------------------------------
+
+        if(
+            createsNewHorizontalAttack
+        ){
+
+            addCpuActionPoints(
+                action,
+                30,
+                "バーニングエナジーで新規ヨコ向き撃破"
+            );
+
+        }
+
+
+        //----------------------------------
+        // ログ
+        //----------------------------------
+
+        console.log(
+            "CPU：バーニングエナジー評価",
+            "タテ向き新規撃破=",
+            createsNewVerticalAttack,
+            "ヨコ向き新規撃破=",
+            createsNewHorizontalAttack
+        );
+
+    }
+
+}
+
+    //==================================
+    // フォローウィンド
+    //==================================
+
+    if(
+        card.name ===
+        "フォローウィンド"
+    ){
+
+        //----------------------------------
+        // 攻撃可能状態を作る
+        //----------------------------------
+
+        if(
+            cpuHasMeaningfulAttack()
+        ){
+
+            addCpuActionPoints(
+                action,
+                35,
+                "攻撃準備"
+            );
+
+        }
+
+    }
+
+
+//==================================
+// ウィンドプレッシャー
+//==================================
+
+if(
+    card.name ===
+    "ウィンドプレッシャー"
+){
+
+    //----------------------------------
+    // PLAYER手札が少ないほど高評価
+    //----------------------------------
+
+    const handCount =
+        board.handCards.length;
+
+
+    const handValue =
+        Math.max(
+            0,
+            (10 - handCount) * 5
+        );
+
+
+    addCpuActionPoints(
+        action,
+        handValue,
+        "PLAYER手札が少ないほど有効"
+    );
+
+}
+
+    //==================================
+    // ウィルオウィスプとのコンボ
+    //==================================
+
+    if(
+        card.name === "パイロフレイム" ||
+        card.name === "ファイアボール" ||
+        card.name === "エクスプロジア"
+    ){
+
+        const hasWillOWisp =
+            enemyField.some(
+                summon =>
+                    summon.card?.name ===
+                    "ウィルオウィスプ"
+            );
+
+
+        if(hasWillOWisp){
+
+            addCpuActionPoints(
+                action,
+                30,
+                "ウィルオウィスプとのコンボ"
+            );
+
+        }
+
+    }
+
+
+    //==================================
+    // ドラゴン・クラーケン対策
+    //==================================
+
+    if(
+        cpuHasDragonOrKraken()
+    ){
+
+        if(
+            card.name === "ファイアボール" ||
+            card.name === "パイロフレイム" ||
+            card.name === "エクスプロジア"
+        ){
+
+            if(
+                target &&
+                target.card &&
+                isDragonOrKraken(target)
+            ){
+
+                addCpuActionPoints(
+                    action,
+                    80,
+                    "ドラゴン・クラーケン破壊"
+                );
+
+            }
+
+        }
+
+    }
+
+
+    //==================================
+    // 最終ログ
+    //==================================
+
+    console.log(
+        "CPUマギア候補完成",
+        card.name,
+        "target=",
+        target?.card?.name ||
+        target,
+        "points=",
+        action.points
+    );
+
+
+    return action;
+
+}
+//======================================
+// CPU：攻撃行動ポイント評価
+//======================================
+
+function evaluateCpuAttackAction(
+    attacker
+){
+
+    if(!attacker){
+
+        return null;
 
     }
 
 
     //----------------------------------
-    // 念のため
+    // CPUサモンでなければ不可
     //----------------------------------
 
-    return candidates[0];
+    if(
+        attacker.owner !== ENEMY
+    ){
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // 攻撃可能確認
+    //----------------------------------
+
+    if(
+        attacker.isRest
+    ){
+
+        return null;
+
+    }
+
+
+    if(
+        !attacker.attackReady &&
+        attacker.card?.ability?.type !==
+        "summonTurnAttack"
+    ){
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // 攻撃力
+    //----------------------------------
+
+    const attackPower =
+        getPower(
+            attacker
+        );
+
+
+    //----------------------------------
+    // PLAYER側のブロッカー
+    //----------------------------------
+
+    const blockers =
+        playerField.filter(
+            summon => {
+
+                if(!summon){
+
+                    return false;
+
+                }
+
+
+                if(
+                    summon.owner !== PLAYER
+                ){
+
+                    return false;
+
+                }
+
+
+                if(
+                    summon.isRest
+                ){
+
+                    return false;
+
+                }
+
+
+                return true;
+
+            }
+        );
+
+
+    //----------------------------------
+    // 攻撃先
+    //----------------------------------
+
+    let target = PLAYER;
+
+
+    //----------------------------------
+    // ブロッカーがいる場合
+    //----------------------------------
+
+    if(
+        blockers.length > 0
+    ){
+
+        //----------------------------------
+        // 倒せるブロッカー
+        //----------------------------------
+
+        const killable =
+            blockers.filter(
+                blocker =>
+                    attackPower >=
+                    getPower(blocker)
+            );
+
+
+        if(
+            killable.length > 0
+        ){
+
+            //----------------------------------
+            // 一番パワーが高いものを攻撃
+            //----------------------------------
+
+            killable.sort(
+                (a,b)=>
+                    getPower(b)
+                    -
+                    getPower(a)
+            );
+
+
+            target =
+                killable[0];
+
+        }
+        else{
+
+            //----------------------------------
+            // 倒せないなら攻撃候補なし
+            //----------------------------------
+
+            return null;
+
+        }
+
+    }
+
+
+    //----------------------------------
+    // 行動作成
+    //----------------------------------
+
+    const action =
+        createCpuAction(
+            "ATTACK",
+            attacker,
+            target
+        );
+
+
+    //==================================
+    // 基本ポイント
+    //==================================
+
+    addCpuActionPoints(
+        action,
+        10,
+        "攻撃基本点"
+    );
+
+
+    //==================================
+    // プレイヤー本体への攻撃
+    //==================================
+
+    if(
+        target === PLAYER
+    ){
+
+        addCpuActionPoints(
+            action,
+            30,
+            "PLAYER本体を攻撃"
+        );
+
+    }
+
+
+    //==================================
+    // サモンへの攻撃
+    //==================================
+
+    else{
+
+        const targetPower =
+            getPower(
+                target
+            );
+
+
+        //----------------------------------
+        // 破壊できる
+        //----------------------------------
+
+        if(
+            attackPower >=
+            targetPower
+        ){
+
+            addCpuActionPoints(
+                action,
+                50,
+                "サモンを破壊できる"
+            );
+
+        }
+
+
+        //----------------------------------
+        // 高パワーサモンを倒す
+        //----------------------------------
+
+        if(
+            targetPower >= 3
+        ){
+
+            addCpuActionPoints(
+                action,
+                20,
+                "高パワーサモンを処理"
+            );
+
+        }
+
+    }
+
+
+    //==================================
+    // 攻撃者のパワー評価
+    //==================================
+
+    addCpuActionPoints(
+        action,
+        attackPower * 3,
+        "攻撃力評価"
+    );
+
+
+    //----------------------------------
+    // 最終ログ
+    //----------------------------------
+
+    console.log(
+        "CPU攻撃ポイント評価",
+        attacker.card?.name,
+        "target=",
+        target === PLAYER
+            ? "PLAYER"
+            : target.card?.name,
+        "points=",
+        action.points
+    );
+
+
+    return action;
+
+}
+
+//======================================
+// CPU：攻撃行動候補を作成
+//======================================
+
+function createCpuAttackActions(){
+
+    const actions = [];
+
+
+    //----------------------------------
+    // CPUフィールドを確認
+    //----------------------------------
+
+    enemyField.forEach(
+        summon => {
+
+            const action =
+                evaluateCpuAttackAction(
+                    summon
+                );
+
+
+            if(action){
+
+                actions.push(
+                    action
+                );
+
+            }
+
+        }
+    );
+
+
+    return actions;
+
+}
+
+
+//======================================
+// CPU：全行動候補を作成
+//======================================
+
+function createCpuActions(){
+
+    const actions = [];
+
+
+    //==================================
+    // サモン候補
+    //==================================
+
+    const summonActions =
+        createCpuSummonActions();
+
+
+    actions.push(
+        ...summonActions
+    );
+
+
+    //==================================
+    // マギア候補
+    //==================================
+
+    enemyHandCards.forEach(
+        card => {
+
+            const action =
+                createCpuMagiaAction(
+                    card
+                );
+
+
+            if(action){
+
+                actions.push(
+                    action
+                );
+
+            }
+
+        }
+    );
+
+
+    //==================================
+    // 攻撃候補
+    //==================================
+
+    if(
+        cpuHasMeaningfulAttack()
+    ){
+
+        const attackAction =
+            createCpuAction(
+                "ATTACK"
+            );
+
+
+        //----------------------------------
+        // 攻撃基本ポイント
+        //----------------------------------
+
+        addCpuActionPoints(
+            attackAction,
+            30,
+            "意味のある攻撃"
+        );
+
+
+        actions.push(
+            attackAction
+        );
+
+    }
+
+
+    //==================================
+    // ターン終了候補
+    //==================================
+
+    const endAction =
+        createCpuAction(
+            "END"
+        );
+
+
+    addCpuActionPoints(
+        endAction,
+        0,
+        "ターン終了"
+    );
+
+
+    actions.push(
+        endAction
+    );
+
+
+    //----------------------------------
+    // 候補確認
+    //----------------------------------
+
+    console.log(
+        "================================"
+    );
+
+    console.log(
+        "CPU全行動候補",
+        actions
+    );
+
+    console.log(
+        "================================"
+    );
+
+
+    return actions;
+
+}
+
+//======================================
+// CPU：ポイント方式で最善行動を取得
+//======================================
+
+function cpuSelectBestAction(){
+
+    //----------------------------------
+    // 全行動候補を作成
+    //----------------------------------
+
+    const actions =
+        createCpuActions();
+
+
+    //----------------------------------
+    // 候補なし
+    //----------------------------------
+
+    if(
+        !actions ||
+        actions.length === 0
+    ){
+
+        console.log(
+            "CPU：行動候補なし"
+        );
+
+        return null;
+
+    }
+
+
+    //----------------------------------
+    // 最もポイントが高い行動を選択
+    //----------------------------------
+
+    const bestAction =
+        selectBestCpuAction(
+            actions
+        );
+
+
+    //----------------------------------
+    // 選択結果
+    //----------------------------------
+
+    if(bestAction){
+
+        console.log(
+            "================================"
+        );
+
+        console.log(
+            "CPUポイント方式：次の行動",
+            bestAction.type,
+            bestAction.card?.name,
+            "points=",
+            bestAction.points
+        );
+
+        console.log(
+            "================================"
+        );
+
+    }
+
+
+    return bestAction;
+
+}
+
+//======================================
+// CPU：ポイント方式で次の行動を実行
+//======================================
+
+function cpuExecuteBestAction(){
+
+    //----------------------------------
+    // ゲーム終了確認
+    //----------------------------------
+
+    if(battleGameEnding){
+
+        console.log(
+            "CPU：ゲーム終了のため行動しない"
+        );
+
+        return;
+
+    }
+
+
+    //----------------------------------
+    // 全行動候補を作成
+    //----------------------------------
+
+    const actions =
+        createCpuActions();
+
+
+    //----------------------------------
+    // 候補なし
+    //----------------------------------
+
+    if(
+        !actions ||
+        actions.length === 0
+    ){
+
+        console.log(
+            "CPU：行動候補なし → ターン終了"
+        );
+
+        cpuTurnStep = 4;
+
+        setTimeout(
+            runCpuTurnStep,
+            500
+        );
+
+        return;
+
+    }
+
+
+    //----------------------------------
+    // 最善行動を取得
+    //----------------------------------
+
+    const bestAction =
+        selectBestCpuAction(
+            actions
+        );
+
+
+    //----------------------------------
+    // 行動なし
+    //----------------------------------
+
+    if(!bestAction){
+
+        console.log(
+            "CPU：最善行動なし → ターン終了"
+        );
+
+        cpuTurnStep = 4;
+
+        setTimeout(
+            runCpuTurnStep,
+            500
+        );
+
+        return;
+
+    }
+
+
+    //----------------------------------
+    // 選択結果
+    //----------------------------------
+
+    console.log(
+        "================================"
+    );
+
+    console.log(
+        "CPUポイント方式 行動決定"
+    );
+
+    console.log(
+        "type=",
+        bestAction.type
+    );
+
+    console.log(
+        "card=",
+        bestAction.card?.name
+    );
+
+    console.log(
+        "target=",
+        bestAction.target?.card?.name ||
+        bestAction.target
+    );
+
+    console.log(
+        "points=",
+        bestAction.points
+    );
+
+    console.log(
+        "================================"
+    );
+
+
+    //==================================
+    // SUMMON
+    //==================================
+
+    if(
+        bestAction.type ===
+        "SUMMON"
+    ){
+
+        const card =
+            bestAction.card;
+
+
+        if(!card){
+
+            console.log(
+                "CPU：SUMMONカードなし"
+            );
+
+            cpuTurnStep = 4;
+
+            setTimeout(
+                runCpuTurnStep,
+                500
+            );
+
+            return;
+
+        }
+
+
+        console.log(
+            "CPU：ポイント方式でサモン実行",
+            card.name
+        );
+
+
+        const result =
+            cpuSummon(
+                card
+            );
+
+
+        if(result){
+
+            cpuSummonUsedThisTurn = true;
+
+        }
+
+
+        //----------------------------------
+        // 次の行動を再評価
+        //----------------------------------
+
+        setTimeout(
+            runCpuTurnStep,
+            2000
+        );
+
+        return;
+
+    }
+
+
+    //==================================
+    // MAGIA
+    //==================================
+
+    if(
+        bestAction.type ===
+        "MAGIA"
+    ){
+
+        const card =
+            bestAction.card;
+
+        const target =
+            bestAction.target;
+
+
+        if(
+            !card ||
+            !target
+        ){
+
+            console.log(
+                "CPU：MAGIAカードまたは対象なし"
+            );
+
+            cpuTurnStep = 4;
+
+            setTimeout(
+                runCpuTurnStep,
+                500
+            );
+
+            return;
+
+        }
+
+
+        console.log(
+            "CPU：ポイント方式でマギア実行",
+            card.name,
+            "target=",
+            target?.card?.name ||
+            target
+        );
+
+
+        const result =
+            cpuMagia(
+                card,
+                target
+            );
+
+
+        console.log(
+            "CPU：ポイント方式マギア結果",
+            result
+        );
+
+
+        //----------------------------------
+        // 強制コスト型
+        //----------------------------------
+
+        if(
+            card.effect &&
+            card.effect.type ===
+            "forceCost"
+        ){
+
+            console.log(
+                "CPU：強制コスト型 → 選択待ち"
+            );
+
+            return;
+
+        }
+
+
+        //----------------------------------
+        // 次の行動を再評価
+        //----------------------------------
+
+        setTimeout(
+            runCpuTurnStep,
+            2000
+        );
+
+        return;
+
+    }
+
+
+    //==================================
+    // ATTACK
+    //==================================
+
+    if(
+        bestAction.type ===
+        "ATTACK"
+    ){
+
+        console.log(
+            "CPU：ポイント方式で攻撃開始"
+        );
+
+
+        //----------------------------------
+        // 攻撃フェーズへ
+        //----------------------------------
+
+        cpuStartAttackPhase();
+
+
+        return;
+
+    }
+
+
+    //==================================
+    // END
+    //==================================
+
+    if(
+        bestAction.type ===
+        "END"
+    ){
+
+        console.log(
+            "CPU：ポイント方式でターン終了"
+        );
+
+
+        cpuTurnStep = 4;
+
+
+        setTimeout(
+            runCpuTurnStep,
+            500
+        );
+
+        return;
+
+    }
 
 }

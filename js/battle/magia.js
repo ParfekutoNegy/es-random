@@ -1795,7 +1795,7 @@ function startMagiaCoolTargetSelect(){
 
     const button =
         document.getElementById(
-            "close-cool-button"
+            "close-cool-x-button"
         );
 
 

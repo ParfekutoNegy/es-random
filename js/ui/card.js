@@ -324,6 +324,19 @@ this.updateSelection();
 
 setSelected(flag = true){
 
+
+        console.log(
+        "setSelected",
+        this.name,
+        "area=",
+        this.area,
+        "変更前=",
+        this.selected,
+        "変更後=",
+        flag
+    );
+
+
     this.selected = flag;
 
     this.updateMarker();

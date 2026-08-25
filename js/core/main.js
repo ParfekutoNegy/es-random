@@ -3639,7 +3639,7 @@ function openCoolModal(
 
     const button =
         document.getElementById(
-            "close-cool-button"
+            "close-cool-x-button"
         );
 
 
@@ -6710,3 +6710,5 @@ function hideMatchResult(){
     );
 
 }
+
+console.log("GitHubテス1ト");
