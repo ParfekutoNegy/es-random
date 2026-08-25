@@ -545,7 +545,191 @@ if(retryButton){
     }
 
 
+    //=========================
+// メニューボタン
+//=========================
 
+const menuButton =
+    document.getElementById(
+        "menu-button"
+    );
+
+const gameMenu =
+    document.getElementById(
+        "game-menu"
+    );
+
+const closeMenuButton =
+    document.getElementById(
+        "close-menu-button"
+    );
+
+
+if(menuButton && gameMenu){
+
+    menuButton.onclick = ()=>{
+
+        gameMenu.classList.toggle(
+            "show"
+        );
+
+    };
+
+}
+
+
+if(closeMenuButton && gameMenu){
+
+    closeMenuButton.onclick = ()=>{
+
+        gameMenu.classList.remove(
+            "show"
+        );
+
+    };
+
+}
+
+//=========================
+// 投了ボタン
+//=========================
+
+const concedeButton =
+    document.getElementById(
+        "concede-button"
+    );
+
+
+if(concedeButton){
+
+    concedeButton.onclick = ()=>{
+
+        const result =
+            window.confirm(
+                "投了しますか？\n\n投了すると、このゲームはCPUの勝利になります。"
+            );
+
+
+        if(!result){
+
+            console.log(
+                "投了キャンセル"
+            );
+
+            return;
+
+        }
+
+
+        //----------------------------------
+        // メニューを閉じる
+        //----------------------------------
+
+        if(gameMenu){
+
+            gameMenu.classList.remove(
+                "show"
+            );
+
+        }
+
+
+        //----------------------------------
+        // 投了
+        //----------------------------------
+
+        concedeGame();
+
+    };
+
+}
+
+
+
+//======================================
+// ゲーム初期化ボタン
+//======================================
+
+const resetGameButton =
+    document.getElementById(
+        "reset-game-button"
+    );
+
+
+console.log(
+    "★ reset-game-button取得結果：",
+    resetGameButton
+);
+
+
+if(resetGameButton){
+
+    console.log(
+        "★ リセットボタンにイベント登録"
+    );
+
+
+    resetGameButton.onclick = ()=>{
+
+        console.log(
+            "★ ゲーム初期化ボタンが押された"
+        );
+
+
+        //----------------------------------
+        // 確認
+        //----------------------------------
+
+        const result =
+            window.confirm(
+                "ゲームを初期化しますか？\n\n現在の対戦状況はすべてリセットされます。"
+            );
+
+
+        console.log(
+            "★ 確認結果：",
+            result
+        );
+
+
+        if(!result){
+
+            console.log(
+                "★ ゲーム初期化キャンセル"
+            );
+
+            return;
+
+        }
+
+
+        //----------------------------------
+        // メニューを閉じる
+        //----------------------------------
+
+        if(gameMenu){
+
+            gameMenu.classList.remove(
+                "show"
+            );
+
+        }
+
+
+        //----------------------------------
+        // ゲームを最初から再読み込み
+        //----------------------------------
+
+        console.log(
+            "★ ゲームリロード"
+        );
+
+
+        location.reload();
+
+    };
+
+}
     //------------------------------------------
     // コスト表示
     //------------------------------------------
@@ -5932,28 +6116,6 @@ function logCpuCardTotal(){
 }
 
 
-const resetGameButton =
-    document.getElementById(
-        "reset-game-button"
-    );
-
-if(resetGameButton){
-
-    resetGameButton.addEventListener(
-        "click",
-        ()=>{
-
-            console.log(
-                "★ ゲームリロード"
-            );
-
-            location.reload();
-
-        }
-    );
-
-}
-
 //======================================
 // CPUカード使用演出
 //======================================
@@ -6391,6 +6553,48 @@ function finishBattleGame(winner){
         );
 
     },2000);
+
+}
+
+//======================================
+// 投了
+//======================================
+
+function concedeGame(){
+
+    console.log(
+        "================================"
+    );
+
+    console.log(
+        "===== PLAYER 投了 ====="
+    );
+
+
+    //----------------------------------
+    // すでにゲーム終了なら無視
+    //----------------------------------
+
+    if(
+        game.state === TURN_STATE.END
+    ){
+
+        console.log(
+            "投了処理：すでにゲーム終了"
+        );
+
+        return;
+
+    }
+
+
+    //----------------------------------
+    // CPU勝利として1戦終了
+    //----------------------------------
+
+    finishBattleGame(
+        ENEMY
+    );
 
 }
 
