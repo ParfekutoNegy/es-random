@@ -1734,6 +1734,48 @@ const damageValue =
 
 
 //======================================
+// 必殺対象
+// PLAYER手札1枚以下
+// かつ、このマギアでLIFEを0以下にできる
+//======================================
+
+if(
+    isDamageMagia
+){
+
+    const playerHandCount =
+        board.handCards.length;
+
+    const playerLife =
+        game.playerLife;
+
+
+    if(
+        playerHandCount <= 1 &&
+        damageValue >= playerLife &&
+        card.effect.target.includes("enemy")
+    ){
+
+        console.log(
+            "★ CPU：必殺のためPLAYERを直接対象",
+            card.name,
+            "PLAYER手札=",
+            playerHandCount,
+            "PLAYER LIFE=",
+            playerLife,
+            "ダメージ=",
+            damageValue
+        );
+
+
+        return PLAYER;
+
+    }
+
+}
+
+
+//======================================
 // ダメージマギア専用優先順位
 //======================================
 
@@ -5664,28 +5706,77 @@ function createCpuMagiaAction(card){
         playerHandCount <= 2;
 
 
-    //----------------------------------
-    // 通常の手札温存
-    //----------------------------------
+//----------------------------------
+// 必殺条件
+// PLAYER手札1枚以下
+// かつ火力がPLAYERのLIFE以上
+//----------------------------------
 
-    if(
-        !canIgnoreHandLimit &&
+const isDamageMagia =
+    card.effect &&
+    card.effect.type === "damage";
+
+const damageValue =
+    isDamageMagia
+        ? Number(card.effect.value) || 0
+        : 0;
+
+const isPlayerLethal =
+    isDamageMagia &&
+    playerHandCount <= 1 &&
+    damageValue >= game.playerLife;
+
+
+//----------------------------------
+// 通常の手札温存
+//----------------------------------
+//
+// 必殺できる場合だけ
+// CPUの手札温存ルールを無視する
+//
+
+if(
+    !canIgnoreHandLimit &&
+    !isPlayerLethal &&
+    enemyHandCards.length
+    - 1
+    - currentCost
+    < 2
+){
+
+    console.log(
+        "CPUポイント評価：マギア候補外",
+        card.name,
+        "手札温存"
+    );
+
+    return null;
+
+}
+
+
+//----------------------------------
+// 必殺時ログ
+//----------------------------------
+
+if(
+    isPlayerLethal
+){
+
+    console.log(
+        "★ CPU必殺条件成立",
+        card.name,
+        "PLAYER手札=",
+        playerHandCount,
+        "PLAYER LIFE=",
+        game.playerLife,
+        "ダメージ=",
+        damageValue,
+        "CPU手札=",
         enemyHandCards.length
-        - 1
-        - currentCost
-        < 2
-    ){
+    );
 
-        console.log(
-            "CPUポイント評価：マギア候補外",
-            card.name,
-            "手札温存"
-        );
-
-        return null;
-
-    }
-
+}
 
     //----------------------------------
     // 攻撃セットアップ用マギア
@@ -6539,28 +6630,52 @@ if(
 ){
 
     //----------------------------------
-    // PLAYER手札が少ないほど高評価
+    // PLAYER手札枚数による評価
     //----------------------------------
 
     const handCount =
         board.handCards.length;
 
 
-    const handValue =
-        Math.max(
-            0,
-            (10 - handCount) * 5
-        );
+    let handValue = 0;
 
+
+    if(handCount === 1){
+
+        handValue = 30;
+
+    }
+    else if(handCount === 2){
+
+        handValue = 70;
+
+    }
+    else if(handCount === 3){
+
+        handValue = 30;
+
+    }
+    else if(handCount === 4){
+
+        handValue = 10;
+
+    }
+
+
+    //----------------------------------
+    // ポイント加算
+    //----------------------------------
 
     addCpuActionPoints(
         action,
         handValue,
-        "PLAYER手札が少ないほど有効"
+        "PLAYER手札" +
+        handCount +
+        "枚 → +" +
+        handValue
     );
 
 }
-
     //==================================
     // ウィルオウィスプとのコンボ
     //==================================

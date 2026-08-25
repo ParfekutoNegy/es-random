@@ -211,12 +211,19 @@
 
 }
 
+
+
 /* ==========================
-   相手プレイヤー
+   相手プレイヤー情報
+   固定配置用
 ========================== */
+
 #enemy-player-area{
 
-    flex:1;
+    flex:none;
+
+    width:200px;
+    height:140px;
 
     display:flex;
 
@@ -245,7 +252,9 @@
 
     border:3px solid rgba(255,255,255,0.8);
 
-    transform:translateY(15px);
+    transform:translate(290px,15px);
+
+
 
     z-index:20;
 
@@ -806,7 +815,7 @@
 
     position:relative;
 
-    transform:translateX(300px);
+    transform:translateX(290px);
 
 }
 
@@ -891,7 +900,7 @@
 
     justify-content:center;
 
-    transform:translateX(-270px);
+    transform:translateX(300px);
 
 }
 
@@ -981,7 +990,7 @@
 
     justify-content:center;
 
-    transform:translateX(-220px);
+    transform:translateX(320px);
 
 }
 
@@ -1331,7 +1340,7 @@
 
 #enemy-life-display{
 
-    transform:translate(-2px, 12px);
+    transform:translate(285px, 12px);
 
 }
 
@@ -1470,6 +1479,8 @@
 #match-result-overlay.show{
 
     opacity:1;
+
+    pointer-events:auto;
 
 }
 

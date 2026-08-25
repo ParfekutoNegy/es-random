@@ -105,6 +105,150 @@ let turnAnimation = false;
 let battleGameEnding = false;
 
 //==================================================
+// プレイヤー・CPUアイコン
+//==================================================
+
+const characterIcons = [
+
+    "images/ui/character-01.png",
+    "images/ui/character-02.png",
+    "images/ui/character-03.png",
+    "images/ui/character-04.png",
+    "images/ui/character-05.png",
+    "images/ui/character-06.png",
+    "images/ui/character-07.png",
+    "images/ui/character-08.png",
+    "images/ui/character-09.png",
+    "images/ui/character-10.png",
+    "images/ui/character-11.png",
+    "images/ui/character-12.png",
+    "images/ui/character-13.png",
+    "images/ui/character-14.png",
+    "images/ui/character-15.png",
+    "images/ui/character-16.png",
+
+];
+
+
+//==================================================
+// 現在のマッチで使用するアイコン
+//==================================================
+
+let currentPlayerIcon = null;
+let currentEnemyIcon = null;
+
+
+//==================================================
+// 新しいマッチ用アイコンをランダム決定
+//==================================================
+
+function selectRandomMatchIcons(){
+
+    //----------------------------------
+    // アイコン一覧をコピー
+    //----------------------------------
+
+    const icons =
+        [...characterIcons];
+
+
+    //----------------------------------
+    // PLAYER用をランダム選択
+    //----------------------------------
+
+    const playerIndex =
+        Math.floor(
+            Math.random() *
+            icons.length
+        );
+
+    currentPlayerIcon =
+        icons[playerIndex];
+
+
+    //----------------------------------
+    // PLAYERに選ばれたものを削除
+    //----------------------------------
+
+    icons.splice(
+        playerIndex,
+        1
+    );
+
+
+    //----------------------------------
+    // CPU用をランダム選択
+    //----------------------------------
+
+    const enemyIndex =
+        Math.floor(
+            Math.random() *
+            icons.length
+        );
+
+    currentEnemyIcon =
+        icons[enemyIndex];
+
+
+    console.log(
+        "今回のマッチのアイコン",
+        "PLAYER:",
+        currentPlayerIcon,
+        "CPU:",
+        currentEnemyIcon
+    );
+
+}
+
+//==================================================
+// 現在のマッチのアイコンを画面へ設定
+//==================================================
+
+function updateMatchIcons(){
+
+    const playerIcon =
+        document.getElementById(
+            "player-icon"
+        );
+
+    const enemyIcon =
+        document.getElementById(
+            "enemy-player-icon"
+        );
+
+
+    //----------------------------------
+    // PLAYER
+    //----------------------------------
+
+    if(
+        playerIcon &&
+        currentPlayerIcon
+    ){
+
+        playerIcon.src =
+        currentPlayerIcon;
+
+    }
+
+
+    //----------------------------------
+    // CPU
+    //----------------------------------
+
+    if(
+        enemyIcon &&
+        currentEnemyIcon
+    ){
+
+        enemyIcon.src =
+            currentEnemyIcon;
+
+    }
+
+}
+
+//==================================================
 // DOM読み込み
 //==================================================
 
@@ -202,6 +346,35 @@ function initializeGame(){
         cancelSummon;
 
     }
+
+//------------------------------------------
+// もう一度遊ぶボタン
+//------------------------------------------
+
+const retryButton =
+    document.getElementById(
+        "retry-game-button"
+    );
+
+
+if(retryButton){
+
+    retryButton.onclick = ()=>{
+
+        console.log(
+            "★ もう一度遊ぶ"
+        );
+
+
+        //----------------------------------
+        // ゲームをリロード
+        //----------------------------------
+
+        location.reload();
+
+    };
+
+}
 
 
 
@@ -5769,7 +5942,7 @@ if(resetGameButton){
     resetGameButton.addEventListener(
         "click",
         ()=>{
-            
+
             console.log(
                 "★ ゲームリロード"
             );
@@ -5780,7 +5953,6 @@ if(resetGameButton){
     );
 
 }
-
 
 //======================================
 // CPUカード使用演出
@@ -6434,11 +6606,10 @@ function startNextGame(winner){
 
 }
 
+
 //======================================
 // 対戦終了
 //======================================
-
-
 
 function finishMatch(winner){
 
@@ -6451,37 +6622,25 @@ function finishMatch(winner){
 
 
     //----------------------------------
-    // 次のゲームの先攻を決定
-    // 勝者の反対側＝敗者が先攻
-    //----------------------------------
-
-    setNextFirstPlayer(
-        winner
-    );
-
-
-    console.log(
-        "次のゲームの先攻：",
-        nextFirstPlayer
-    );
-
-
-    //----------------------------------
     // ゲーム終了
     //----------------------------------
 
     game.state =
         TURN_STATE.END;
 
+
     //----------------------------------
     // モーダルを閉じる
     //----------------------------------
 
     closeEnemyCoolModal();
+
     closeCoolModal();
 
     closeHandModal();
+
     closeSummonActionModal();
+
     closeCostView();
 
     resetAttackState();
@@ -6543,31 +6702,31 @@ function finishMatch(winner){
     }
 
 
-    //----------------------------------
-    // 一定時間後に次のゲーム
-    //----------------------------------
+//----------------------------------
+// もう一度遊ぶボタン
+//----------------------------------
 
-    setTimeout(()=>{
+const retryButton =
+    document.getElementById(
+        "retry-game-button"
+    );
 
-        overlay.classList.remove(
-            "show"
-        );
+
+if(retryButton){
+
+    retryButton.style.display =
+        "block";
+
+}
 
 
-        //----------------------------------
-        // まだマッチ継続なら
-        //----------------------------------
-
-        if(
-            playerWins < 2 &&
-            enemyWins < 2
-        ){
-
-            startNextGame();
-
-        }
-
-    },3000);
+    console.log(
+        "マッチ終了",
+        "PLAYER",
+        playerWins,
+        "CPU",
+        enemyWins
+    );
 
 }
 
@@ -6711,4 +6870,193 @@ function hideMatchResult(){
 
 }
 
-console.log("GitHubテス1ト");
+//======================================
+// もう一度遊ぶ
+//======================================
+
+function restartGame(){
+
+    console.log(
+        "================================"
+    );
+
+    console.log(
+        "===== もう一度遊ぶ ====="
+    );
+
+
+    //----------------------------------
+    // 結果表示を消す
+    //----------------------------------
+
+    hideMatchResult();
+
+
+    //----------------------------------
+    // もう一度遊ぶボタンを隠す
+    //----------------------------------
+
+    const retryGameButton =
+        document.getElementById(
+            "retry-game-button"
+        );
+
+
+    if(retryGameButton){
+
+        retryGameButton.style.display =
+            "none";
+
+    }
+
+
+    //----------------------------------
+    // ゲーム終了状態解除
+    //----------------------------------
+
+    battleGameEnding = false;
+
+
+    //----------------------------------
+    // 勝利数リセット
+    //----------------------------------
+
+    playerWins = 0;
+
+    enemyWins = 0;
+
+
+    //----------------------------------
+    // ゲーム番号リセット
+    //----------------------------------
+
+    matchGameNumber = 1;
+
+
+    //----------------------------------
+    // 選択状態リセット
+    //----------------------------------
+
+    clearHandSelection();
+
+    clearFieldSelection();
+
+    resetAttackState();
+
+
+    selectedHandCard = null;
+
+    summonCard = null;
+
+    selectedCostCards = [];
+
+    costConfirm = false;
+
+    selectedSummon = null;
+
+    selectedFieldCard = null;
+
+    selectedEnemySummon = null;
+
+    selectedCoolCard = null;
+
+
+    //----------------------------------
+    // クール・行動状態リセット
+    //----------------------------------
+
+    summonUsedThisTurn = false;
+
+    coolRecoveryMode = false;
+
+    coolViewMode = false;
+
+    currentCoolOwner = PLAYER;
+
+
+    //----------------------------------
+    // レジスト状態リセット
+    //----------------------------------
+
+    resistMode = false;
+
+    resistEvent = null;
+
+    selectableResistCards = [];
+
+    resistUsingCard = null;
+
+    selectedResistCostCards = [];
+
+    resistCostConfirm = false;
+
+
+    //----------------------------------
+    // ターン演出状態リセット
+    //----------------------------------
+
+    turnAnimation = false;
+
+
+    //----------------------------------
+    // ゲーム状態リセット
+    //----------------------------------
+
+    game.turn = 0;
+
+    game.playerLife = 5;
+
+    game.enemyLife = 5;
+
+    game.currentPlayer = null;
+
+    game.state =
+        TURN_STATE.START;
+
+
+    //----------------------------------
+    // 開始手札履歴リセット
+    //----------------------------------
+
+    playerStartingCardIds = [];
+
+    enemyStartingCardIds = [];
+
+    playerMatchStartingCards = [];
+
+    enemyMatchStartingCards = [];
+
+
+    //----------------------------------
+    // 盤面初期化
+    //----------------------------------
+
+    setupGame();
+
+
+    //----------------------------------
+    // ☆表示
+    //----------------------------------
+
+    updateWinStars();
+
+
+    //----------------------------------
+    // LIFE表示
+    //----------------------------------
+
+    updateLifeDisplay();
+
+
+    //----------------------------------
+    // 新しいマッチ開始
+    //----------------------------------
+
+    startMatch();
+
+
+    console.log(
+        "===== 新しいマッチ開始 ====="
+    );
+
+}
