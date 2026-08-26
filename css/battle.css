@@ -10,8 +10,6 @@
 
     transform-origin:center center;
 
-    background-image:url("../images/background/battle-background-01.png");
-
     background-size:100% 100%;
     background-position:center;
     background-repeat:no-repeat;
@@ -151,6 +149,18 @@
     position:relative;
 
     top:25px;
+}
+
+#field-area .card {
+    box-shadow:
+        0 3px 5px rgba(0, 0, 0, 0.35),
+        0 7px 12px rgba(0, 0, 0, 0.25);
+}
+
+.card.horizontal {
+    box-shadow:
+        0 3px 5px rgba(0, 0, 0, 0.4),
+        0 7px 12px rgba(0, 0, 0, 0.25);
 }
 
 

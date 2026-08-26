@@ -272,6 +272,14 @@ function initializeGame(){
     board = new Board();
 
 
+ 
+    //==================================
+    // バトル背景をランダム設定
+    //==================================
+
+    setRandomBattleBackground();   
+
+
 
     //------------------------------------------
     // ボタン登録
@@ -7263,4 +7271,41 @@ function restartGame(){
         "===== 新しいマッチ開始 ====="
     );
 
+}
+
+//======================================
+// バトル背景をランダム設定
+//======================================
+
+function setRandomBattleBackground(){
+
+    const backgrounds = [
+        "../images/background/battle-background-01.png",
+        "../images/background/battle-background-02.png",
+        "../images/background/battle-background-03.png",
+        "../images/background/battle-background-04.png"
+    ];
+
+    const randomIndex =
+        Math.floor(
+            Math.random() * backgrounds.length
+        );
+
+    const battleScreen =
+        document.getElementById("battle-screen");
+
+    if(!battleScreen){
+        console.warn(
+            "battle-screen が見つかりません"
+        );
+        return;
+    }
+
+    battleScreen.style.backgroundImage =
+        `url("${backgrounds[randomIndex]}")`;
+
+    console.log(
+        "バトル背景:",
+        backgrounds[randomIndex]
+    );
 }

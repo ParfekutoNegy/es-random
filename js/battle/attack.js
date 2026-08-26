@@ -475,25 +475,10 @@ addBattleLog(
 // バジリスク：バトル相手を記録
 //----------------------------------
 
-if(
-    attackingSummon.card.ability?.type ===
-    "coolAfterBattle"
-){
-
-    attackingSummon.battleOpponent =
-        target;
-
-}
-
-if(
-    target.card.ability?.type ===
-    "coolAfterBattle"
-){
-
-    target.battleOpponent =
-        attackingSummon;
-
-}
+setBasiliskBattleTarget(
+    attackingSummon,
+    target
+);
 
 
 //----------------------------------
@@ -1696,28 +1681,15 @@ console.log(
         true
     );
 
-    //----------------------------------
-// バジリスクのバトル相手を記録
+
+//----------------------------------
+// バジリスク：バトル相手を記録
 //----------------------------------
 
-if(
-    attackingSummon.card.ability?.type ===
-    "coolAfterBattle"
-){
-
-    basiliskBattleTarget =
-        blocker;
-
-}
-else if(
-    blocker.card.ability?.type ===
-    "coolAfterBattle"
-){
-
-    basiliskBattleTarget =
-        attackingSummon;
-
-}
+setBasiliskBattleTarget(
+    attackingSummon,
+    blocker
+);
 
     //----------------------------------
     // ダメージ交換
@@ -1849,28 +1821,14 @@ addBattleLog(
     `CPU：${blocker.card.name}が${attacker.card.name}をブロック`
 );
 
-    //----------------------------------
-// バジリスクのバトル相手を記録
+//----------------------------------
+// バジリスク：バトル相手を記録
 //----------------------------------
 
-if(
-    attacker.card.ability?.type ===
-    "coolAfterBattle"
-){
-
-    basiliskBattleTarget =
-        blocker;
-
-}
-else if(
-    blocker.card.ability?.type ===
-    "coolAfterBattle"
-){
-
-    basiliskBattleTarget =
-        attacker;
-
-}
+setBasiliskBattleTarget(
+    attacker,
+    blocker
+);
 
 
  //----------------------------------

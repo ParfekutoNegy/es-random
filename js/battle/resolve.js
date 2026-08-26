@@ -4,6 +4,58 @@
 
 let basiliskBattleTarget = null;
 
+//======================================
+// バジリスク：バトル相手を記録
+//======================================
+
+function setBasiliskBattleTarget(
+    attacker,
+    defender
+){
+
+    //----------------------------------
+    // 攻撃側がバジリスク
+    //----------------------------------
+
+    if(
+        attacker?.card?.ability?.type ===
+        "coolAfterBattle"
+    ){
+
+        basiliskBattleTarget =
+            defender;
+
+        console.log(
+            "バジリスク：攻撃側として戦闘相手を記録",
+            defender?.card?.name
+        );
+
+        return;
+    }
+
+
+    //----------------------------------
+    // 防御側がバジリスク
+    //----------------------------------
+
+    if(
+        defender?.card?.ability?.type ===
+        "coolAfterBattle"
+    ){
+
+        basiliskBattleTarget =
+            attacker;
+
+        console.log(
+            "バジリスク：防御側として戦闘相手を記録",
+            attacker?.card?.name
+        );
+
+        return;
+    }
+
+}
+
 
 //==================================================
 // resolve.js
