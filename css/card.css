@@ -17,7 +17,12 @@
 }
 
 
-
+.card{
+    filter:
+        drop-shadow(
+            0 4px 5px rgba(0,0,0,0.45)
+        );
+}
 
 .card-image{
 
@@ -41,7 +46,7 @@
     translateY(-15px);
 
     outline:
-    4px solid gold;
+    2px solid rgb(255, 255, 252);
 
 }
 
