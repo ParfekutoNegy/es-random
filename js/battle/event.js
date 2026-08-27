@@ -77,6 +77,27 @@ function triggerResist(event){
 
 
     //----------------------------------
+    // 最終ダメージが0以下なら
+    // 「ダメージを受けた」とはみなさない
+    //----------------------------------
+
+    if(
+        Number(event.damage) <= 0
+    ){
+
+        console.log(
+            "レジスト発動なし：最終ダメージ0",
+            "damage=",
+            event.damage
+        );
+
+        return false;
+
+    }
+
+
+
+    //----------------------------------
     // CPUがダメージを受ける場合
     //----------------------------------
 
@@ -258,15 +279,13 @@ function findResistCards(event){
     // プレイヤーがダメージを受ける場合
     //----------------------------------
 
-    if(event.player !== PLAYER){
+if(event.player !== PLAYER){
 
-        return [];
+    return [];
 
-    }
+}
 
-
-    const result = [];
-
+const result = [];
 
     console.log(
         "レジスト判定イベント",
