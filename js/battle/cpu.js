@@ -490,6 +490,72 @@ enemyField.filter(summon=>{
 
     }
 
+    //----------------------------------
+    // ゴーレム特殊条件
+    //----------------------------------
+    // PLAYER側に
+    // パワー3以上の縦向きサモンがいる場合
+    // CPUゴーレムは攻撃しない
+    //----------------------------------
+
+    if(
+        summon.card.name === "ゴーレム"
+    ){
+
+        const strongVerticalSummon =
+            playerField.some(
+                target => {
+
+                    if(!target){
+
+                        return false;
+
+                    }
+
+
+                    if(target.destroyed){
+
+                        return false;
+
+                    }
+
+
+                    //----------------------------------
+                    // 横向きは対象外
+                    //----------------------------------
+
+                    if(target.isRest){
+
+                        return false;
+
+                    }
+
+
+                    //----------------------------------
+                    // パワー3以上
+                    //----------------------------------
+
+                    return (
+                        getPower(target) >= 3
+                    );
+
+                }
+            );
+
+
+        if(strongVerticalSummon){
+
+            console.log(
+                "CPU：ゴーレムは攻撃しない",
+                "PLAYER側にパワー3以上の縦向きサモンあり"
+            );
+
+            return false;
+
+        }
+
+    }
+
 
 //----------------------------------
 // ブロックされないサモン
@@ -793,50 +859,6 @@ function selectCpuAttackTarget(){
         "攻撃力=",
         attackerPower
     );
-
-
-    //----------------------------------
-    // ゴーレム特殊判断
-    //----------------------------------
-    // 相手の場にパワー3以上のサモンがいる場合
-    // ブロック用として温存する
-    //----------------------------------
-
-    if(
-        attackingSummon.card.name === "ゴーレム"
-    ){
-
-        const strongSummon =
-            playerField.some(
-                summon => {
-
-                    if(summon.destroyed){
-
-                        return false;
-
-                    }
-
-                    return (
-                        getPower(summon) >= 3
-                    );
-
-                }
-            );
-
-
-        if(strongSummon){
-
-            console.log(
-                "CPU：ゴーレムは攻撃しない",
-                "相手の場にパワー3以上のサモンあり"
-            );
-
-
-            return null;
-
-        }
-
-    }
 
 
     //----------------------------------
